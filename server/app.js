@@ -19,7 +19,7 @@ app.use(express.json({ limit: "50mb" }));
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "hhttps://atlantis-ticket.vercel.app",
+  "https://atlantis-ticket.vercel.app",
 ];
 
 app.use(
