@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import TicketBox from "./TicketBox";
 import PaymentSummary from "./PaymentSummary";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import { useToast } from "@/components/ui/use-toast";
-import EmailInputDialog from "./EmailInputDialog";
 
 const BookEvents = () => {
     const [ticketCounts, setTicketCounts] = useState({});
@@ -15,74 +14,107 @@ const BookEvents = () => {
     const [code, setCode] = useState("");
     const { user } = useSelector((state) => state.user);
     const BASE_URL = import.meta.env.VITE_BASE_URL;
-
     const { toast } = useToast();
     const { eventId } = useParams();
     const navigate = useNavigate();
 
-    const handlePayment = async (setLoading) => {
-        const obj = Object.entries(ticketCounts)
-            .filter(([key, value]) => value > 0)
-            .map(([type, quantity]) => ({ type, quantity }));
+    useEffect(() => {
+        const getTicketTypes = async () => {
+            try {
+                const res = await axios.get(`${BASE_URL}/tickets/types/${eventId}`);
+                
+                const ticketTypes = res.data.ticketTypes;
+                setTypes(ticketTypes);
 
-        if (obj.length == 0)
+                // Initialize ticket counts
+                const initialCounts = ticketTypes.reduce((acc, { _id }) => {
+                    acc[_id] = 0;
+                    return acc;
+                }, {});
+                setTicketCounts(initialCounts);
+            } catch (error) {
+                console.error("Error fetching ticket types:", error);
+                toast({
+                    title: "Error",
+                    description: "Unable to fetch ticket types. Please try again later.",
+                    variant: "destructive",
+                });
+            }
+        };
+
+        getTicketTypes();
+    }, [eventId, BASE_URL, toast]);
+
+    const handlePayment = async (setLoading) => {
+        const tickets = Object.entries(ticketCounts)
+            .filter(([_, quantity]) => quantity > 0)
+            .map(([type, quantity]) => ({ type, quantity }));
+    
+        if (tickets.length === 0) {
             return toast({
                 title: "Payment Incomplete",
-                description:
-                    "Please select at least one ticket before proceeding with the payment.",
+                description: "Please select at least one ticket before proceeding.",
                 variant: "destructive",
             });
-
+        }
+    
+        if (!email) {
+            return toast({
+                title: "Email Required",
+                description: "Please provide your email address before proceeding.",
+                variant: "destructive",
+            });
+        }
+    
         try {
             setLoading(true);
-            await axios.post(BASE_URL + "/tickets/bookings", {
+            const response = await axios.post(`${BASE_URL}/tickets/bookings`, {
                 emailId: email,
                 eventId: eventId,
-                tickets: obj,
+                tickets,
+                promoCode: code, 
             });
-            toast({
-                title: "Payment Successful",
-                description:
-                    "Your payment has been processed successfully. Thank you for booking with us!",
-            });
-            navigate("/");
+    
+            console.log("Response from server:", response);
+    
+            // Check response status
+            if (response.status === 201) {
+                toast({
+                    title: "Payment Successful",
+                    description: response.data.message || "Your payment has been processed successfully. Thank you for booking with us!",
+                });
+                navigate("/");
+            } else {
+                toast({
+                    title: "Payment Failed",
+                    description: response.data.message || "There was an issue with processing your payment. Please try again later.",
+                    variant: "destructive",
+                });
+            }
         } catch (error) {
-            console.log(error);
+            console.error("Error booking tickets:", error);
             toast({
                 title: "Payment Failed",
-                description:
-                    "There was an issue with processing your payment. Please try again later.",
+                description: "There was an issue with processing your payment. Please try again later.",
                 variant: "destructive",
             });
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        const getTicketTypes = async () => {
-            const res = await axios.get(BASE_URL + "/tickets/types/" + eventId);
-            setTypes(res?.data?.ticketTypes);
-            let emptyobj = {};
-            res.data.ticketTypes.map(({ _id }) => (emptyobj[_id] = 0));
-            console.log(emptyobj);
-            setTicketCounts(emptyobj);
-        };
-        getTicketTypes();
-    }, []);
+    
 
     return (
         <div>
             <div className="flex flex-wrap gap-5 mb-5">
-                {types?.map((type) => (
+                {types.map((type) => (
                     <TicketBox
-                        key={type?._id}
-                        id={type?._id}
-                        type={type?.category}
+                        key={type._id}
+                        id={type._id}
+                        type={type.category}
                         ticketCount={ticketCounts}
                         setTicketCount={setTicketCounts}
-                        price={type?.price}
-                        // desc={"Allows entrance for one person only for one day"}
+                        price={type.price}
                         setTotalCost={setTotalCost}
                     />
                 ))}

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ImageIcon, Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { DatePickerWithRange } from "@/components/DatePicker";
 import useFirebaseUpload from "@/hooks/use-firebaseUpload";
 import { useToast } from "@/components/ui/use-toast";
+import axios from 'axios'; // Ensure you have axios installed or use fetch
 
 const EventTitle = ({
     setTitle,
@@ -20,6 +21,10 @@ const EventTitle = ({
 }) => {
     const [loading, setLoading] = useState(false);
     const [img, setImg] = useState(image);
+    const [promoCode, setPromoCode] = useState("");
+    const [discountPercentage, setDiscountPercentage] = useState("");
+    const [expiresAt, setExpiresAt] = useState("");
+    const [isActive, setIsActive] = useState(true);
     const { toast } = useToast();
     const navigate = useNavigate();
     const { progress, error, downloadURL, fileName } = useFirebaseUpload(img);
@@ -40,6 +45,49 @@ const EventTitle = ({
         setLoading(true);
     };
 
+    const handleSave = async () => {
+        if (loading) return;
+
+        if (iosdate?.length < 1) {
+            return toast({
+                variant: "destructive",
+                title: "Date is missing",
+                description: "Select date properly",
+            });
+        }
+
+        if (title.trim() && description.trim() && image) {
+            setShowTitleField(false);
+
+            // Save event logic goes here
+
+            // Example of saving promo code
+            try {
+                await axios.post('http://localhost:8081/api/v1/events/add-promo', {
+                    code: promoCode,
+                    discountPercentage,
+                    expiresAt,
+                    isActive
+                });
+                toast({
+                    variant: "success",
+                    title: "Promo code added successfully",
+                });
+            } catch (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Error adding promo code",
+                    description: error.response?.data?.message || "An error occurred.",
+                });
+            }
+        } else {
+            return toast({
+                variant: "destructive",
+                title: "All the fields are required",
+            });
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 bg-black/80">
             <div className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-[900px] translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 sm:rounded-lg">
@@ -58,25 +106,7 @@ const EventTitle = ({
                         </Button>{" "}
                         &nbsp;&nbsp;&nbsp;
                         <Button
-                            onClick={() => {
-                                if (loading) return;
-
-                                if (iosdate?.length < 1) {
-                                    return toast({
-                                        variant: "destructive",
-                                        title: "Date is missing",
-                                        description: "Select date properly",
-                                    });
-                                }
-
-                                if (title.trim() && description.trim() && image)
-                                    return setShowTitleField(false);
-                                else
-                                    return toast({
-                                        variant: "destructive",
-                                        title: "All the fields are required",
-                                    });
-                            }}
+                            onClick={handleSave}
                         >
                             {loading ? (
                                 <Loader2 className="mx-2 h-4 w-4 animate-spin" />
@@ -86,10 +116,10 @@ const EventTitle = ({
                         </Button>
                     </div>
                 </div>
-                <div className="flex flex-col sm:flex-row  gap-5">
+                <div className="flex flex-col sm:flex-row gap-5">
                     <div className="flex-1 ">
-                        <div className="  bg-input rounded-[25px] h-full overflow-hidden border  group shadow-custom">
-                            <label className=" h-full min-h-[300px] cursor-pointer flex items-center justify-center">
+                        <div className="bg-input rounded-[25px] h-full overflow-hidden border group shadow-custom">
+                            <label className="h-full min-h-[300px] cursor-pointer flex items-center justify-center">
                                 <input
                                     type="file"
                                     className="hidden w-full"
@@ -107,15 +137,13 @@ const EventTitle = ({
                                     </div>
                                 ) : (
                                     <>
-                                        {" "}
                                         <ImageIcon className="size-20 text-gray-400" />
-                                        {/* <CiImageOn className="size-20 text-gray-400" />{" "} */}
                                     </>
                                 )}
                             </label>
                         </div>
                     </div>
-                    <div className="flex-1   space-y-5">
+                    <div className="flex-1 space-y-5">
                         <input
                             type="text"
                             className="bg-input rounded-[25px] p-2 w-full shadow-custom"
@@ -126,7 +154,7 @@ const EventTitle = ({
                         <DatePickerWithRange
                             date={date}
                             setDate={setDate}
-                            className=" bg-input rounded-[25px]  w-full shadow-custom"
+                            className="bg-input rounded-[25px] w-full shadow-custom"
                         />
                         <textarea
                             rows="5"
@@ -135,6 +163,38 @@ const EventTitle = ({
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Event Description"
                         />
+                        {/* Promo Code Details */}
+                        <input
+                            type="text"
+                            className="bg-input rounded-[25px] p-2 w-full shadow-custom"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            placeholder="Promo Code"
+                        />
+                        <input
+                            type="number"
+                            className="bg-input rounded-[25px] p-2 w-full shadow-custom"
+                            value={discountPercentage}
+                            onChange={(e) => setDiscountPercentage(e.target.value)}
+                            placeholder="Discount Percentage"
+                        />
+                        <input
+                            type="date"
+                            className="bg-input rounded-[25px] p-2 w-full shadow-custom"
+                            value={expiresAt}
+                            onChange={(e) => setExpiresAt(e.target.value)}
+                            placeholder="Expires At"
+                        />
+                        <div>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={isActive}
+                                    onChange={(e) => setIsActive(e.target.checked)}
+                                />
+                                Active
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>

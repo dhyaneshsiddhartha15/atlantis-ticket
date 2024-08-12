@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import React, { useState } from "react";
-
 import {
     Dialog,
     DialogClose,
@@ -24,14 +23,22 @@ const PaymentSummary = ({
 }) => {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
-    const [value, setValue] = useState("");
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const handleApplyPromoCode = () => {
+        // Assuming you have a way to verify the promo code validity
+        // You may want to call an API here or have a function to check the promo code
+        return toast({
+            title: "Promo Code Applied",
+            description: `Promo code "${code}" has been successfully applied.`,
+            variant: "success",
+        });
+    };
+
     return (
         <div className="bg-secondary rounded-lg p-5 w-full lg:w-1/2 space-y-3 shadow-lg">
             <h1 className="text-xl">Payment Summary</h1>
-            <p>
-                Please review the details below and proceed with your payment.
-            </p>
+            <p>Please review the details below and proceed with your payment.</p>
             <div className="p-1 flex shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
                 <input
                     type="text"
@@ -44,6 +51,7 @@ const PaymentSummary = ({
                     variant="outline"
                     disabled={!code}
                     className="h-[3.2rem] rounded-md"
+                    onClick={handleApplyPromoCode}
                 >
                     Apply
                 </Button>
