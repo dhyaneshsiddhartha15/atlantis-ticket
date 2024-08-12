@@ -68,7 +68,6 @@ const EventTitle = ({
                 });
             }
         } else if (step === 2) {
-            // Check promo code fields only if they are provided
             if (
                 (promoCode && !promoCodeDiscount) ||
                 (promoCodeDiscount && !expiryDate) ||
@@ -81,13 +80,13 @@ const EventTitle = ({
                 return;
             }
 
-            // Call API to add promo code if details are provided
             if (promoCode && promoCodeDiscount && expiryDate && maxUses) {
                 addPromoCode(promoCode, promoCodeDiscount, expiryDate, maxUses)
                     .then(() => {
                         toast({
                             variant: "success",
                             title: "Promo code added successfully.",
+                            className: "bg-sky-400 text-white border-sky-500", 
                         });
                     })
                     .catch(() => {
@@ -104,7 +103,7 @@ const EventTitle = ({
 
     const addPromoCode = async (code, discount, expiryDate, maxUses) => {
         try {
-            const response = await fetch("http://localhost:8081/api/v1/events/add-promo", {
+            const response = await fetch("https://atlantis-ticket-1.onrender.com/api/v1/events/add-promo", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -4,7 +4,6 @@ const Promo=require("../models/promoCode")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const mongoose = require("mongoose");
-
 const Item = require("../models/itemsModel");
 const TicketType = require("../models/ticketTypesModel");
 
