@@ -1,14 +1,44 @@
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const promoCodeSchema = new mongoose.Schema({
-  code: { type: String, required: true, unique: true },
-  discountPercentage: { type: Number, required: true },
-  expiresAt: { type: Date },
-  isActive: { type: Boolean, default: true },
-  maxUses: { type: Number, required: true },
-  currentUses: { type: Number, default: 0 }
+const promoSchema = new Schema({
+    code: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    event: {
+        type: Schema.Types.ObjectId,
+        ref: 'Event',
+        required: true
+    },
+    expiresAt: {
+        type: Date,
+        required: true
+    },
+    maxUses: {
+        type: Number,
+        required: true
+    },
+    currentUses: {
+        type: Number,
+        default: 0
+    },
+    discountType: {
+        type: String,
+        enum: ['percentage', 'fixed'],
+        required: true
+    },
+    discountPercentage: {
+        type: Number
+    },
+    discountPrice: {
+        type: Number
+    },
+    applicableCategories: {
+        type: [String], // Array of strings
+        default: [] // Default to an empty array
+    }
 });
 
-
-const PromoCode = mongoose.model('PromoCode', promoCodeSchema);
-module.exports = PromoCode;
+module.exports = mongoose.model('Promo', promoSchema);

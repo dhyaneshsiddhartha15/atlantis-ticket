@@ -16,7 +16,7 @@ const eventSchema = new mongoose.Schema(
     ],
 
     status: {
-      type: "String", //Booked Confirmed Rejected
+      type: "String", 
       default: "Booked",
     },
 
@@ -28,6 +28,11 @@ const eventSchema = new mongoose.Schema(
     isPublished: {
       type: Boolean,
       default: false,
+    },
+    promoCode: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Promo",
+      default: null,   
     },
   },
   { timestamps: true },

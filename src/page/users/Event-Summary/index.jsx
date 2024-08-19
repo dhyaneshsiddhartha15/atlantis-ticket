@@ -3,27 +3,54 @@ import { Skeleton } from "@/components/ui/skeleton";
 import axios from "axios";
 import { Calendar } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 const EventSummary = () => {
     const [event, setEvent] = useState(null);
+    const [loading, setLoading] = useState(false);
     const { eventId } = useParams();
     const BASE_URL = import.meta.env.VITE_BASE_URL;
+    const { toast } = useToast(); // Importing toast
+    const navigate = useNavigate();
+
+    const handleDelete = async () => {
+        try {
+            setLoading(true);
+            const res = await axios.delete(`${BASE_URL}/events/delete-event/${eventId}`);
+
+            if (res.status === 200) {
+                toast({
+                    description: "Event deleted successfully",
+                });
+                navigate("/");
+            } else {
+                toast({
+                    description: "Failed to delete event",
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            toast({
+                description: "Error deleting event",
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const getData = async () => {
             try {
-                const res = await axios.get(
-                    BASE_URL + "/events/single-event/" + eventId
-                );
-
+                const res = await axios.get(`${BASE_URL}/events/single-event/${eventId}`);
                 setEvent(res?.data?.data?.event?.details);
             } catch (error) {
                 console.log(error);
             }
         };
         getData();
-    }, []);
+    }, [eventId]);
+
     return (
         <div>
             {event ? (
@@ -32,44 +59,55 @@ const EventSummary = () => {
                         className="relative min-h-[30vh] max-h-[40vh] w-full bg-cover bg-center rounded-lg"
                         style={{ backgroundImage: `url(${event?.images[0]})` }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black opacity-50"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black opacity-50">
+                            <div className="absolute bottom-5 right-10 flex gap-4">
+                                <Button 
+                                    variant="outline" 
+                                    color="danger"
+                                    onClick={handleDelete}
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Deleting...' : 'Delete Event'}
+                                </Button>
+                                <Button 
+                                    variant="outline"
+                                    color="primary"
+                                    asChild
+                                >
+                                    <Link to={`/events/update-event/${eventId}`}>
+                                        Edit Event
+                                    </Link>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
                     <div className="flex justify-between items-center py-5 bg-secondary mt-5 rounded-lg p-5 flex-wrap">
                         <div className="flex justify-center items-center gap-3">
                             <Calendar className="w-8 h-8 " />
                             <div>
-                                Starts at : {event?.dates[0]?.split("T")[0]}{" "}
-                                <br />
-                                Ends at &nbsp;:{" "}
-                                {
-                                    event?.dates[
-                                        event?.dates?.length - 1
-                                    ]?.split("T")[0]
-                                }
+                                Starts at: {event?.dates[0]?.split("T")[0]} <br />
+                                Ends at: {event?.dates[event?.dates?.length - 1]?.split("T")[0]}
                             </div>
-                        </div>{" "}
+                        </div>
                         <Button asChild>
                             <Link to={`/ticket-booking/${eventId}`}>
-                                Book now
+                                Book Now
                             </Link>
                         </Button>
                     </div>
                     <div className="mt-5">
                         <h2 className="text-xl">
-                            <b>Title : {event?.name}</b>
+                            <b>Title: {event?.name}</b>
                         </h2>
-
-                        <h3 className="text-xl mt-2">Description : </h3>
+                        <h3 className="text-xl mt-2">Description:</h3>
                         <p className="indent-8 mt-2 text-justify">
                             {event?.description}
                         </p>
-                        {/* <p></p> */}
                     </div>
                 </>
             ) : (
                 <>
                     <Skeleton className={"w-full h-[35vh]"} />
-
                     <Skeleton className={"w-full h-[8vh] mt-10"} />
                     <Skeleton className={"w-full md:w-1/2 h-10 mt-5"} />
                     <Skeleton className={"w-full md:w-1/3 h-10 mt-5"} />

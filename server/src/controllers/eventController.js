@@ -131,34 +131,416 @@ const getEvensByCondition = async (condition) => {
   // ]);
   return { Upcoming: upcomingEvents, Past: pastEvents };
 };
+// exports.createEvent = catchAsync(async (req, res, next) => {
+//   console.log(req.body);
+
+//   const newEvent = new Event({
+//     name: req.body.event.name,
+//     description: req.body.event.description,
+//     images: req.body.event.images,
+
+//     dates: req.body.event.dates || [],
+//   });
+
+//   await newEvent.save();
+
+//   const categorys = req.body.categorys;
+//   const eventId = newEvent._id;
+
+//   for (cat of categorys) {
+//     const insertedCategory = new TicketType({ eventId, category: cat.category, price: cat.price });
+//     await insertedCategory.save();
+//   }
+
+//   const event = await Event.findByIdAndUpdate(eventId, { isPublished: true });
+
+//   const data = await getEvensByCondition({ isPublished: true });
+
+//   res.status(201).json({ success: true, Upcoming: data.Upcoming, Past: data.Past });
+// });
+/* Test it later */
+// exports.createEvent = catchAsync(async (req, res, next) => {
+//   try {
+//     const { name, description, images, dates = [], promoDetails = {} } = req.body.event;
+//     const categorys = req.body.categorys || []; // Extract categories from req.body
+
+//     // Log the request body and promo details for debugging
+//     console.log("Request Body:", categorys );
+//     console.log("Promo Code Data:", promoDetails);
+
+//     // Create and save the new event
+//     const newEvent = new Event({
+//       name,
+//       description,
+//       images,
+//       dates
+//     });
+
+//     const savedEvent = await newEvent.save();
+//     const eventId = savedEvent._id;
+
+//     // Handle categories (ticket types)
+//     await Promise.all(
+//       categorys.map(async (cat, index) => {
+//         console.log(`Inserting category #${index + 1}:`, cat);
+
+//         // Explicitly convert price to a number
+//         const price = Number(cat.price);
+
+//         if (isNaN(price) || price <= 0) {
+//           throw new Error("Invalid price value. It must be a positive number.");
+//         }
+
+//         const insertedCategory = new TicketType({
+//           eventId,
+//           category: cat.category,
+//           price: price
+//         });
+
+//         const savedCategory = await insertedCategory.save();
+//         console.log(`Saved Category #${index + 1}:`, savedCategory);
+//       })
+//     );
+
+//     // Handle promo code if provided
+//     let promoCodeId = null;
+//     if (promoDetails.promoCode) {
+//       const { promoCode, discountPercentage, discountPrice, discountType, expiryDate, maxUses } = promoDetails;
+
+//       if (!promoCode || !discountType || !expiryDate || maxUses === undefined) {
+//         return res.status(400).json({
+//           message: "Please provide all required details for the promo code."
+//         });
+//       }
+
+//       if (!['percentage', 'fixed'].includes(discountType)) {
+//         return res.status(400).json({
+//           message: "Invalid discountType. Must be 'percentage' or 'fixed'."
+//         });
+//       }
+
+//       // Convert maxUses to a number
+//       const maxUsesNumber = Number(maxUses);
+
+//       if (isNaN(maxUsesNumber) || maxUsesNumber <= 0 || !Number.isInteger(maxUsesNumber)) {
+//         return res.status(400).json({
+//           message: "Invalid maxUses value. It must be a positive integer."
+//         });
+//       }
+
+//       const expiresDate = new Date(expiryDate);
+//       if (isNaN(expiresDate.getTime())) {
+//         return res.status(400).json({
+//           message: "Invalid expiry date format."
+//         });
+//       }
+
+//       // Create the promo code
+//       const newPromoCode = new Promo({
+//         code: promoCode,
+//         discountPercentage: discountType === 'percentage' ? discountPercentage : 0,
+//         discountPrice: discountType === 'fixed' ? discountPrice : 0,
+//         discountType,
+//         expiresAt: expiresDate,
+//         isActive: true,
+//         maxUses: maxUsesNumber,
+//         currentUses: 0,
+//         event: eventId
+//       });
+
+//       const savedPromoCode = await newPromoCode.save();
+//       promoCodeId = savedPromoCode._id;
+//       console.log("Saved Promo Code:", savedPromoCode);
+//     }
+
+//     // Update the event with the promo code reference if it exists
+//     if (promoCodeId) {
+//       await Event.findByIdAndUpdate(eventId, { promoCode: promoCodeId });
+//     }
+
+//     // Update the event to set it as published
+//     await Event.findByIdAndUpdate(eventId, { isPublished: true });
+
+//     // Fetch events by condition (assuming this function is defined elsewhere)
+//     const data = await getEvensByCondition({ isPublished: true });
+
+//     // Send response with the updated data
+//     res.status(201).json({
+//       success: true,
+//       Upcoming: data.Upcoming,
+//       Past: data.Past
+//     });
+
+//   } catch (error) {
+//     console.error("Error creating event:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Internal server error."
+//     });
+//   }
+// });
 
 exports.createEvent = catchAsync(async (req, res, next) => {
-  console.log(req.body);
+  try {
+    const { name, description, images, dates = [], promoDetails = {} } = req.body.event;
+    const categorys = req.body.categorys || []; 
+    console.log("Request Body:", categorys);
+    console.log("Promo Code Data:", promoDetails);
 
-  const newEvent = new Event({
-    name: req.body.event.name,
-    description: req.body.event.description,
-    images: req.body.event.images,
 
-    dates: req.body.event.dates || [],
-  });
+    const newEvent = new Event({
+      name,
+      description,
+      images,
+      dates
+    });
 
-  await newEvent.save();
+    const savedEvent = await newEvent.save();
+    const eventId = savedEvent._id;
 
-  const categorys = req.body.categorys;
-  const eventId = newEvent._id;
 
-  for (cat of categorys) {
-    const insertedCategory = new TicketType({ eventId, category: cat.category, price: cat.price });
-    await insertedCategory.save();
+    const savedCategories = await Promise.all(
+      categorys.map(async (cat, index) => {
+        console.log(`Inserting category #${index + 1}:`, cat);
+
+        const price = Number(cat.price);
+        if (isNaN(price) || price <= 0) {
+          throw new Error("Invalid price value. It must be a positive number.");
+        }
+
+        const insertedCategory = new TicketType({
+          eventId,
+          category: cat.category,
+          price: price
+        });
+
+        const savedCategory = await insertedCategory.save();
+        console.log(`Saved Category #${index + 1}:`, savedCategory);
+
+        return savedCategory; // Return saved category
+      })
+    );
+
+    let promoCodeId = null;
+    if (promoDetails.promoCode) {
+      const { promoCode, discountPercentage, discountPrice, discountType, expiryDate, maxUses, applicableCategory } = promoDetails;
+
+      if (!promoCode || !discountType || !expiryDate || maxUses === undefined) {
+        return res.status(400).json({
+          message: "Please provide all required details for the promo code."
+        });
+      }
+
+      if (!['percentage', 'fixed'].includes(discountType)) {
+        return res.status(400).json({
+          message: "Invalid discountType. Must be 'percentage' or 'fixed'."
+        });
+      }
+
+      const maxUsesNumber = Number(maxUses);
+      if (isNaN(maxUsesNumber) || maxUsesNumber <= 0 || !Number.isInteger(maxUsesNumber)) {
+        return res.status(400).json({
+          message: "Invalid maxUses value. It must be a positive integer."
+        });
+      }
+
+      const expiresDate = new Date(expiryDate);
+      if (isNaN(expiresDate.getTime())) {
+        return res.status(400).json({
+          message: "Invalid expiry date format."
+        });
+      }
+
+      const category = savedCategories.find(cat => cat.category === applicableCategory);
+      if (!category) {
+        return res.status(400).json({
+          message: "Invalid category for promo code."
+        });
+      }
+      const newPromoCode = new Promo({
+        code: promoCode,
+        discountPercentage: discountType === 'percentage' ? discountPercentage : 0,
+        discountPrice: discountType === 'fixed' ? discountPrice : 0,
+        discountType,
+        expiresAt: expiresDate,
+        isActive: true,
+        maxUses: maxUsesNumber,
+        currentUses: 0,
+        event: eventId,
+        ticketCategory: category._id 
+      });
+
+      const savedPromoCode = await newPromoCode.save();
+      promoCodeId = savedPromoCode._id;
+      console.log("Saved Promo Code:", savedPromoCode);
+    }
+
+    if (promoCodeId) {
+      await Event.findByIdAndUpdate(eventId, { promoCode: promoCodeId });
+    }
+
+    await Event.findByIdAndUpdate(eventId, { isPublished: true });
+    const data = await getEvensByCondition({ isPublished: true });
+
+    // Send response with the updated data
+    res.status(201).json({
+      success: true,
+      Upcoming: data.Upcoming,
+      Past: data.Past
+    });
+
+  } catch (error) {
+    console.error("Error creating event:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error."
+    });
   }
-
-  const event = await Event.findByIdAndUpdate(eventId, { isPublished: true });
-
-  const data = await getEvensByCondition({ isPublished: true });
-
-  res.status(201).json({ success: true, Upcoming: data.Upcoming, Past: data.Past });
 });
+
+exports.updateEvent = catchAsync(async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    const { name, description, images, dates = [], promoDetails = {}, categorys = [] } = req.body;
+
+    // Find and update the event
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, { name, description, images, dates }, { new: true });
+    if (!updatedEvent) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found."
+      });
+    }
+
+    // Update categories
+    await TicketType.deleteMany({ eventId }); // Remove old categories
+
+    const savedCategories = await Promise.all(
+      categorys.map(async (cat, index) => {
+        console.log(`Inserting category #${index + 1}:`, cat);
+
+        const price = Number(cat.price);
+        if (isNaN(price) || price <= 0) {
+          throw new Error("Invalid price value. It must be a positive number.");
+        }
+
+        const insertedCategory = new TicketType({
+          eventId,
+          category: cat.category,
+          price: price
+        });
+
+        const savedCategory = await insertedCategory.save();
+        console.log(`Saved Category #${index + 1}:`, savedCategory);
+
+        return savedCategory; // Return saved category
+      })
+    );
+
+    // Handle promo code
+    if (promoDetails.promoCode) {
+      const { promoCode, discountPercentage, discountPrice, discountType, expiryDate, maxUses, applicableCategory } = promoDetails;
+
+      if (!promoCode || !discountType || !expiryDate || maxUses === undefined) {
+        return res.status(400).json({
+          message: "Please provide all required details for the promo code."
+        });
+      }
+
+      if (!['percentage', 'fixed'].includes(discountType)) {
+        return res.status(400).json({
+          message: "Invalid discountType. Must be 'percentage' or 'fixed'."
+        });
+      }
+
+      const maxUsesNumber = Number(maxUses);
+      if (isNaN(maxUsesNumber) || maxUsesNumber <= 0 || !Number.isInteger(maxUsesNumber)) {
+        return res.status(400).json({
+          message: "Invalid maxUses value. It must be a positive integer."
+        });
+      }
+
+      const expiresDate = new Date(expiryDate);
+      if (isNaN(expiresDate.getTime())) {
+        return res.status(400).json({
+          message: "Invalid expiry date format."
+        });
+      }
+
+      const category = savedCategories.find(cat => cat.category === applicableCategory);
+      if (!category) {
+        return res.status(400).json({
+          message: "Invalid category for promo code."
+        });
+      }
+
+      const existingPromoCode = await Promo.findOne({ code: promoCode, event: eventId });
+      let newPromoCode;
+
+      if (existingPromoCode) {
+        // Update existing promo code
+        newPromoCode = await Promo.findByIdAndUpdate(existingPromoCode._id, {
+          discountPercentage: discountType === 'percentage' ? discountPercentage : 0,
+          discountPrice: discountType === 'fixed' ? discountPrice : 0,
+          discountType,
+          expiresAt: expiresDate,
+          isActive: true,
+          maxUses: maxUsesNumber,
+          currentUses: existingPromoCode.currentUses,
+          ticketCategory: category._id
+        }, { new: true });
+        console.log("Updated Promo Code:", newPromoCode);
+      } else {
+        // Create new promo code
+        newPromoCode = new Promo({
+          code: promoCode,
+          discountPercentage: discountType === 'percentage' ? discountPercentage : 0,
+          discountPrice: discountType === 'fixed' ? discountPrice : 0,
+          discountType,
+          expiresAt: expiresDate,
+          isActive: true,
+          maxUses: maxUsesNumber,
+          currentUses: 0,
+          event: eventId,
+          ticketCategory: category._id
+        });
+
+        await newPromoCode.save();
+        console.log("Saved Promo Code:", newPromoCode);
+      }
+
+      await Event.findByIdAndUpdate(eventId, { promoCode: newPromoCode._id });
+    } else {
+      // Remove promo code if not provided
+      await Event.findByIdAndUpdate(eventId, { promoCode: null });
+    }
+
+    // Optionally, update the published status
+    await Event.findByIdAndUpdate(eventId, { isPublished: true });
+
+    const data = await getEvensByCondition({ isPublished: true });
+
+    // Send response with the updated data
+    res.status(200).json({
+      success: true,
+      Upcoming: data.Upcoming,
+      Past: data.Past
+    });
+
+  } catch (error) {
+    console.error("Error updating event:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error."
+    });
+  }
+});
+
+
+
+
+
+
 exports.getAllEvents = catchAsync(async (req, res, next) => {
   const data = await getEvensByCondition({ isPublished: true });
 
@@ -166,6 +548,7 @@ exports.getAllEvents = catchAsync(async (req, res, next) => {
     message: "success",
     Upcoming: data.Upcoming,
     Past: data.Past,
+    data
   });
 });
 
@@ -467,53 +850,74 @@ exports.deleteFieldFromEvent = catchAsync(async (req, res, next) => {
 // isActive
 // true
 
-exports.addPromoCode = catchAsync(async (req, res, next) => {
-  try {
-      const { code, discountPercentage, expiresAt, isActive, maxUses } = req.body;
+// exports.addPromoCode = catchAsync(async (req, res, next) => {
+//   try {
+//     const { code, discountPercentage, discountPrice, discountType, expiresAt, isActive, maxUses, event } = req.body;
 
-      if (!code || !discountPercentage || !expiresAt || isActive === undefined || maxUses === undefined) {
-          return res.status(400).json({
-              message: "Please provide all required details, including maxUses."
-          });
-      }
+//     if (!code || !discountType || !expiresAt || isActive === undefined || maxUses === undefined || !event) {
+//       return res.status(400).json({
+//         message: "Please provide all required details, including code, discountType, expiresAt, isActive, maxUses, and event."
+//       });
+//     }
 
-      const expiresDate = new Date(expiresAt);
-      if (isNaN(expiresDate.getTime())) {
-          return res.status(400).json({
-              message: "Invalid expiry date format."
-          });
-      }
+//     if (!['percentage', 'fixed'].includes(discountType)) {
+//       return res.status(400).json({
+//         message: "Invalid discountType. Must be 'percentage' or 'fixed'."
+//       });
+//     }
 
-      if (typeof maxUses !== 'number' || maxUses <= 0 || !Number.isInteger(maxUses)) {
-        return res.status(400).json({
-            message: "Invalid maxUses value. It must be a positive integer."
-        });
-    }
-    
+//     if (discountType === 'percentage' && (discountPercentage === undefined || discountPercentage < 0 || discountPercentage > 100)) {
+//       return res.status(400).json({
+//         message: "Invalid discountPercentage value. It must be between 0 and 100."
+//       });
+//     }
 
-      const newPromoCode = new Promo({
-          code,
-          discountPercentage,
-          expiresAt: expiresDate,
-          isActive,
-          maxUses,
-          currentUses: 0 
-      });
+//     if (discountType === 'fixed' && (discountPrice === undefined || discountPrice < 0)) {
+//       return res.status(400).json({
+//         message: "Invalid discountPrice value. It must be a non-negative number."
+//       });
+//     }
 
-      const savedPromoCode = await newPromoCode.save();
+//     const expiresDate = new Date(expiresAt);
+//     if (isNaN(expiresDate.getTime())) {
+//       return res.status(400).json({
+//         message: "Invalid expiry date format."
+//       });
+//     }
 
-      res.status(201).json({
-          message: "Promo code created successfully.",
-          voucher: savedPromoCode
-      });
+//     if (typeof maxUses !== 'number' || maxUses <= 0 || !Number.isInteger(maxUses)) {
+//       return res.status(400).json({
+//         message: "Invalid maxUses value. It must be a positive integer."
+//       });
+//     }
 
-  } catch (error) {
-      console.error("Error creating promo code:", error);
-      res.status(500).json({
-          message: "Internal server error."
-      });
-  }
-});
+//     // Create the new promo code with event reference
+//     const newPromoCode = new PromoCode({
+//       code,
+//       discountPercentage: discountType === 'percentage' ? discountPercentage : 0,
+//       discountPrice: discountType === 'fixed' ? discountPrice : 0,
+//       discountType,
+//       expiresAt: expiresDate,
+//       isActive,
+//       maxUses,
+//       currentUses: 0,
+//       event  // Add the event reference here
+//     });
+
+//     const savedPromoCode = await newPromoCode.save();
+
+//     res.status(201).json({
+//       message: "Promo code created successfully.",
+//       voucher: savedPromoCode
+//     });
+
+//   } catch (error) {
+//     console.error("Error creating promo code:", error);
+//     res.status(500).json({
+//       message: "Internal server error."
+//     });
+//   }
+// });
 
 exports.updatePromoCode = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -561,3 +965,240 @@ exports.deletePromoCode = catchAsync(async (req, res, next) => {
     return next(new AppError(500, "Internal Server Error"));
   }
 });
+exports.deleteEvent = catchAsync(async (req, res, next) => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      return next(new AppError(400, "Event ID is required"));
+    }
+    console.log("Event id is", eventId);
+    const deletedEvent = await Event.findByIdAndDelete(eventId);
+    if (!deletedEvent) {
+      return next(new AppError(404, "Event not found"));
+    }
+    res.json({
+      success: true,
+      message: "Event deleted successfully"
+    });
+  } catch (error) {
+    console.error("Error deleting event:", error);
+    return next(new AppError(500, "Internal Server Error"));
+  }
+});
+///
+exports.getPromoCode = catchAsync(async (req, res, next) => {
+  try {
+    const { code } = req.body;
+    const { eventId } = req.params;
+      if (!code || !eventId) {
+          return next(new AppError(400, "Promo code and event ID are required"));
+      }
+
+      const promo = await Promo.findOne({ code, event: eventId, isActive: true });
+
+      if (!promo) {
+          return res.status(404).json({
+              message: "Promo code not found or not applicable for this event"
+          });
+      }
+
+      if (promo.expiresAt && promo.expiresAt < new Date()) {
+          return res.status(400).json({
+              message: "Promo code has expired"
+          });
+      }
+
+      if (promo.maxUses <= promo.currentUses) {
+          return res.status(400).json({
+              message: "Promo code usage limit exceeded"
+          });
+      }
+
+      res.status(200).json({
+          message: "Promo code found",
+          discountPercentage: promo.discountPercentage,
+          discountPrice: promo.discountPrice,
+          discountType: promo.discountType,
+          expiresAt: promo.expiresAt,
+          maxUses: promo.maxUses,
+          currentUses: promo.currentUses
+      });
+  } catch (error) {
+      console.error("Error fetching promo code:", error);
+      return next(new AppError(500, "Internal Server Error"));
+  }
+});
+
+exports.applyPromoCode = catchAsync(async (req, res, next) => {
+  try {
+      const { promoCode } = req.body;
+      const { eventId } = req.params;
+      console.log("Promo Code from Body is", promoCode);
+      console.log("Event id from event is ", eventId);
+
+      if (!eventId || !promoCode) {
+          return res.status(400).json({
+              success: false,
+              message: "Please provide both eventId and promoCode."
+          });
+      }
+
+
+      const event = await Event.findById(eventId);
+      if (!event) {
+          return res.status(404).json({
+              success: false,
+              message: "Event not found."
+          });
+      }
+
+      const promo = await Promo.findOne({ code: promoCode, event: eventId });
+      console.log("Promo Code is", promo);
+      if (!promo) {
+          return res.status(404).json({
+              success: false,
+              message: "Promo code not found."
+          });
+      }
+
+      const currentDate = new Date();
+      if (promo.expiresAt < currentDate) {
+          return res.status(400).json({
+              success: false,
+              message: "Promo code has expired."
+          });
+      }
+      if (promo.currentUses >= promo.maxUses) {
+          return res.status(400).json({
+              success: false,
+              message: "Promo code usage limit has been reached."
+          });
+      }
+
+      const ticketTypes = await TicketType.find({ eventId: event._id });
+      if (ticketTypes.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No ticket types found for this event."
+          });
+      }
+
+      const eventCategory = event.category; 
+
+      if (!promo.applicableCategories.includes(eventCategory)) {
+          return res.status(400).json({
+              success: false,
+              message: "Promo code is not applicable for this event category."
+          });
+      }
+
+      const discountInfo = {
+          discountType: promo.discountType,
+          discountValue: promo.discountType === 'percentage' ? promo.discountPercentage : promo.discountPrice,
+          applicableTicketTypes: ticketTypes.map(tt => tt._id)
+      };
+console.log("Applicable",applicableTicketTypes)
+      promo.currentUses += 1;
+      await promo.save();
+
+      res.status(200).json({
+          success: true,
+          message: "Promo code applied successfully.",
+          discountInfo,
+      });
+  } catch (error) {
+      console.log("Error is", error);
+      console.error("Error applying promo code:", error);
+      res.status(500).json({
+          success: false,
+          message: "Internal server error."
+      });
+  }
+});
+
+
+
+// exports.applyPromoCode = catchAsync(async (req, res, next) => {
+//   try {
+//       const { promoCode } = req.body;
+//       const { eventId } = req.params;
+//       console.log("Promo Code from Body is", promoCode);
+//       console.log("Event id from event is ", eventId);
+
+//       // Validate input
+//       if (!eventId || !promoCode) {
+//           return res.status(400).json({
+//               success: false,
+//               message: "Please provide both eventId and promoCode."
+//           });
+//       }
+
+//       // Fetch the event by ID
+//       const event = await Event.findById(eventId);
+//       if (!event) {
+//           return res.status(404).json({
+//               success: false,
+//               message: "Event not found."
+//           });
+//       }
+
+//       // Fetch the promo code details
+//       const promo = await Promo.findOne({ code: promoCode, event: eventId });
+//       console.log("Promo Code is", promo);
+//       if (!promo) {
+//           return res.status(404).json({
+//               success: false,
+//               message: "Promo code not found."
+//           });
+//       }
+
+//       // Check if the promo code has expired
+//       const currentDate = new Date();
+//       if (promo.expiresAt < currentDate) {
+//           return res.status(400).json({
+//               success: false,
+//               message: "Promo code has expired."
+//           });
+//       }
+
+//       // Check if the promo code has been used up
+//       if (promo.currentUses >= promo.maxUses) {
+//           return res.status(400).json({
+//               success: false,
+//               message: "Promo code usage limit has been reached."
+//           });
+//       }
+
+//       // Fetch ticket types for the event
+//       const ticketTypes = await TicketType.find({ eventId: event._id });
+//       if (ticketTypes.length === 0) {
+//           return res.status(404).json({
+//               success: false,
+//               message: "No ticket types found for this event."
+//           });
+//       }
+
+//       const discountInfo = {
+//           discountType: promo.discountType,
+//           discountValue: promo.discountType === 'percentage' ? promo.discountPercentage : promo.discountPrice,
+//           applicableTicketTypes: ticketTypes.map(tt => tt._id)
+//       };
+
+//       // Increment the usage counter for the promo code
+//       promo.currentUses += 1;
+//       await promo.save();
+
+//       res.status(200).json({
+//           success: true,
+//           message: "Promo code applied successfully.",
+//           discountInfo,
+//       });
+//   } catch (error) {
+//       console.log("Error is", error);
+//       console.error("Error applying promo code:", error);
+//       res.status(500).json({
+//           success: false,
+//           message: "Internal server error."
+//       });
+//   }
+// });

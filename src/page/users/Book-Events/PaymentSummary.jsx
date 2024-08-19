@@ -12,27 +12,28 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { useParams } from "react-router-dom";
 
 const PaymentSummary = ({
     code,
     setCode,
+    originalTotalCost,
     totalCost,
     handlePayment,
     setEmail,
     email,
+    handleApplyPromoCode
 }) => {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
+    const [applyingPromo, setApplyingPromo] = useState(false);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const { eventId } = useParams();
 
-    const handleApplyPromoCode = () => {
-        // Assuming you have a way to verify the promo code validity
-        // You may want to call an API here or have a function to check the promo code
-        return toast({
-            title: "Promo Code Applied",
-            description: `Promo code "${code}" has been successfully applied.`,
-            variant: "success",
-        });
+    const onApplyPromoCode = async () => {
+        setApplyingPromo(true);
+        await handleApplyPromoCode();
+        setApplyingPromo(false);
     };
 
     return (
@@ -49,17 +50,26 @@ const PaymentSummary = ({
                 />
                 <Button
                     variant="outline"
-                    disabled={!code}
+                    disabled={!code || applyingPromo}
                     className="h-[3.2rem] rounded-md"
-                    onClick={handleApplyPromoCode}
+                    onClick={onApplyPromoCode}
                 >
-                    Apply
+                    {applyingPromo ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        "Apply"
+                    )}
                 </Button>
             </div>
             <div>
                 <p>
-                    <span className="text-xl">Sub Total :</span> {totalCost}
+                    <span className="text-xl">Sub Total :</span> {originalTotalCost}
                 </p>
+                {originalTotalCost !== totalCost && (
+                    <p>
+                        <span className="text-xl">Discounted Total :</span> {totalCost}
+                    </p>
+                )}
                 <p>
                     <span className="text-2xl">Total:</span> {totalCost}
                 </p>

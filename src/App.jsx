@@ -19,6 +19,9 @@ import Signup from "./page/auth/Signup";
 import BookEvents from "./page/users/Book-Events";
 import EventSummary from "./page/users/Event-Summary";
 
+import { Edit } from "lucide-react";
+import { EditEvent } from "./page/users/Events/EditEvent";
+
 const App = () => {
     const { user } = useSelector((state) => state.user);
 
@@ -38,6 +41,11 @@ const App = () => {
                                 path="event-summary/:eventId"
                                 element={<EventSummary />}
                             />
+ <Route
+                                path="events/update-event/:eventId"
+                                element={<EditEvent/>}
+                            />
+
                             <Route
                                 path="ticket-booking/:eventId"
                                 element={<BookEvents />}

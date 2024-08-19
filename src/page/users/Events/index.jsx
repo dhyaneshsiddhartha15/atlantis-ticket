@@ -11,25 +11,15 @@ import { useSelector } from "react-redux";
 
 const Events = () => {
     const typeOne = [
-        {
-            category: "First class",
-            price: "0",
-        },
-        {
-            category: "Second class",
-            price: "0",
-        },
-        {
-            category: "Third class",
-            price: "0",
-        },
+        { category: "First class", price: "0" },
+        { category: "Second class", price: "0" },
+        { category: "Third class", price: "0" },
     ];
+
     const typeTwo = [
-        {
-            category: "",
-            price: "0",
-        },
+        { category: "", price: "0" },
     ];
+
     const [event, setEvent] = useState("Upcoming");
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -41,21 +31,15 @@ const Events = () => {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [image, setImage] = useState(null);
-
     const [date, setDate] = useState(null);
-    const [tempDate, setTempDate] = useState(new Date());
+    const [tempDate, setTempDate] = useState({ from: null, to: null });
     const { toast } = useToast();
 
     useEffect(() => {
-        if (!tempDate) return;
-        if (!tempDate.from || !tempDate.to) {
-            return;
-        }
+        if (!tempDate.from || !tempDate.to) return;
+
         function normalizeToUTC(date) {
-            const utcDate = new Date(
-                Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-            );
-            return utcDate;
+            return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
         }
 
         const fromDate = normalizeToUTC(new Date(tempDate.from));
@@ -66,30 +50,19 @@ const Events = () => {
         }
 
         const dates = [];
-        for (
-            let dt = new Date(fromDate);
-            dt <= toDate;
-            dt.setDate(dt.getDate() + 1)
-        ) {
+        for (let dt = new Date(fromDate); dt <= toDate; dt.setDate(dt.getDate() + 1)) {
             dates.push(formatUTCISO(new Date(dt)));
         }
 
         setDate(dates);
         toast({
             title: "Date selected",
-            description:
-                "From : " +
-                dates[0].split("T")[0] +
-                " || " +
-                "To : " +
-                dates[dates.length - 1].split("T")[0],
+            description: `From: ${dates[0].split("T")[0]} || To: ${dates[dates.length - 1].split("T")[0]}`,
         });
-    }, [tempDate]);
+    }, [tempDate, toast]);
 
     const { user } = useSelector((state) => state.user);
     const navigate = useNavigate();
-
-    const [servicesList, setServicesList] = useState([]);
 
     const handleCreateEvent = async () => {
         try {
@@ -101,52 +74,45 @@ const Events = () => {
             setLoading(false);
         }
     };
-    const handleConfirm = async (setLoadingInBox) => {
+
+    const handleConfirm = async (setLoadingInBox, promoDetails) => {
         try {
-            // setPublishLoading(true);
+            console.log('Promo Details:', promoDetails); // Debugging
             setLoadingInBox(true);
             setLoading(true);
-
-            const event = {
+    
+            const eventDetails = {
                 name: title,
                 description: description,
                 images: [image],
                 dates: date,
+                promoDetails: promoDetails
             };
-
-            // Send the data as JSON
-            const res = await axios.post(BASE_URL + "/events", {
-                event,
+    
+            const res = await axios.post(`${BASE_URL}/events`, {
+                event: eventDetails,
                 categorys,
             });
-
-            // const res = await axios.post(
-            //     BASE_URL + "/events/publish/" + eventId,
-            //     {
-            //         categorys,
-            //     }
-            // );
-
+    
             setEvents({ Upcoming: res.data.Upcoming, Past: res.data.Past });
             setShowTitleField(false);
         } catch (error) {
             console.log(error);
             toast({
-                description: "Something went wrong please try again later",
+                description: "Something went wrong, please try again later",
             });
         } finally {
             setLoading(false);
             setLoadingInBox(false);
         }
     };
+    
 
     useEffect(() => {
         const getEvents = async () => {
             try {
                 setLoading(true);
-
-                const res = await axios.get(BASE_URL + "/events");
-
+                const res = await axios.get(`${BASE_URL}/events`);
                 setEvents({ Upcoming: res.data.Upcoming, Past: res.data.Past });
             } catch (error) {
                 console.log(error);
@@ -155,7 +121,8 @@ const Events = () => {
             }
         };
         getEvents();
-    }, []);
+    }, [BASE_URL]);
+
     return (
         <div>
             {showTitleField && (
@@ -177,13 +144,13 @@ const Events = () => {
                     categorys={categorys}
                 />
             )}
-            <div className="flex flex-col sm:flex-row  items-center space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0">
                 <div className="flex-1"></div>
 
                 {user && (
                     <Button
                         variant="outline"
-                        className="cursor-pointer  "
+                        className="cursor-pointer"
                         onClick={() => setShowTitleField(!showTitleField)}
                     >
                         <Plus /> &nbsp; Create
@@ -193,24 +160,20 @@ const Events = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 mt-10">
                 {!loading ? (
-                    events[event]?.map(({ item }) => {
-                        return (
-                            <EventCard
-                                key={item && item?._id}
-                                id={item && item?._id}
-                                image={item && item?.images}
-                                title={item && item?.name}
-                                date={item && item?.dates}
-                            />
-                        );
-                    })
+                    events[event]?.map(({ item }) => (
+                        <EventCard
+                            key={item?._id}
+                            id={item?._id}
+                            image={item?.images}
+                            title={item?.name}
+                            date={item?.dates}
+                        />
+                    ))
                 ) : (
                     <>
-                        <Skeleton className="  rounded-2xl h-[250px]   " />
-
-                        <Skeleton className="  rounded-2xl h-[250px]   " />
-
-                        <Skeleton className="  rounded-2xl h-[250px] " />
+                        <Skeleton className="rounded-2xl h-[250px]" />
+                        <Skeleton className="rounded-2xl h-[250px]" />
+                        <Skeleton className="rounded-2xl h-[250px]" />
                     </>
                 )}
             </div>
