@@ -36,8 +36,8 @@ const promoSchema = new Schema({
         type: Number
     },
     applicableCategories: {
-        type: [String], // Array of strings
-        default: [] // Default to an empty array
+        type: [String], 
+        default: [] // 
     }
 });
 

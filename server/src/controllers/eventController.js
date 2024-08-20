@@ -1031,88 +1031,88 @@ exports.getPromoCode = catchAsync(async (req, res, next) => {
 
 exports.applyPromoCode = catchAsync(async (req, res, next) => {
   try {
-      const { promoCode } = req.body;
-      const { eventId } = req.params;
-      console.log("Promo Code from Body is", promoCode);
-      console.log("Event id from event is ", eventId);
+    const { promoCode } = req.body;
+    const { eventId } = req.params;
 
-      if (!eventId || !promoCode) {
-          return res.status(400).json({
-              success: false,
-              message: "Please provide both eventId and promoCode."
-          });
-      }
-
-
-      const event = await Event.findById(eventId);
-      if (!event) {
-          return res.status(404).json({
-              success: false,
-              message: "Event not found."
-          });
-      }
-
-      const promo = await Promo.findOne({ code: promoCode, event: eventId });
-      console.log("Promo Code is", promo);
-      if (!promo) {
-          return res.status(404).json({
-              success: false,
-              message: "Promo code not found."
-          });
-      }
-
-      const currentDate = new Date();
-      if (promo.expiresAt < currentDate) {
-          return res.status(400).json({
-              success: false,
-              message: "Promo code has expired."
-          });
-      }
-      if (promo.currentUses >= promo.maxUses) {
-          return res.status(400).json({
-              success: false,
-              message: "Promo code usage limit has been reached."
-          });
-      }
-
-      const ticketTypes = await TicketType.find({ eventId: event._id });
-      if (ticketTypes.length === 0) {
-          return res.status(404).json({
-              success: false,
-              message: "No ticket types found for this event."
-          });
-      }
-
-      const eventCategory = event.category; 
-
-      if (!promo.applicableCategories.includes(eventCategory)) {
-          return res.status(400).json({
-              success: false,
-              message: "Promo code is not applicable for this event category."
-          });
-      }
-
-      const discountInfo = {
-          discountType: promo.discountType,
-          discountValue: promo.discountType === 'percentage' ? promo.discountPercentage : promo.discountPrice,
-          applicableTicketTypes: ticketTypes.map(tt => tt._id)
-      };
-console.log("Applicable",applicableTicketTypes)
-      promo.currentUses += 1;
-      await promo.save();
-
-      res.status(200).json({
-          success: true,
-          message: "Promo code applied successfully.",
-          discountInfo,
+    if (!eventId || !promoCode) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide both eventId and promoCode."
       });
+    }
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        success: false,
+        message: "Event not found."
+      });
+    }
+
+    const promo = await Promo.findOne({ code: promoCode, event: eventId });
+    if (!promo) {
+      return res.status(404).json({
+        success: false,
+        message: "Promo code not found for this event."
+      });
+    }
+
+    const currentDate = new Date();
+    if (promo.expiresAt < currentDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Promo code has expired."
+      });
+    }
+
+    if (promo.currentUses >= promo.maxUses) {
+      return res.status(400).json({
+        success: false,
+        message: "Promo code usage limit has been reached."
+      });
+    }
+
+    const ticketTypes = await TicketType.find({ eventId: event._id });
+    if (ticketTypes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No ticket types found for this event."
+      });
+    }
+
+    // If applicableCategories is empty, consider all categories applicable
+    const applicableTicketTypes = promo.applicableCategories.length > 0 
+      ? ticketTypes.filter(tt => promo.applicableCategories.includes(tt.category))
+      : ticketTypes;
+console.log("Ticket")
+    if (applicableTicketTypes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Promo code is not applicable for any of the event ticket types."
+      });
+    }
+
+    const discountInfo = {
+      discountType: promo.discountType,
+      discountValue: promo.discountType === 'percentage' ? promo.discountPercentage : promo.discountPrice,
+      applicableTicketTypes: applicableTicketTypes.map(tt => tt._id),
+      applicableCategories: promo.applicableCategories
+    };
+
+    promo.currentUses += 1;
+    await promo.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Promo code applied successfully.",
+      discountInfo,
+    });
   } catch (error) {
-      console.log("Error is", error);
-      console.error("Error applying promo code:", error);
-      res.status(500).json({
-          success: false,
-          message: "Internal server error."
-      });
+    console.error("Error applying promo code:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error."
+    });
   }
 });
 
