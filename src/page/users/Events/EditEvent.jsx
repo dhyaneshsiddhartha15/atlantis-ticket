@@ -113,30 +113,45 @@ export const EditEvent = () => {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Edit Event</h1>
+      <h1 className="text-2xl font-bold  text-red-400">Edit Event</h1>
+      <div className="bg-secondary rounded-lg  p-5 w-full lg:w-1/2 space-y-3 shadow-lg">
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Event Title"
-          required
+      <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
+      <input
+        type="text"
+        value={title}
+        placeholder="Event Title"
+        className="bg-secondary border-none p-3 pl-5 w-full outline-none flex-1"
+        onChange={(e) => setTitle(e.target.value)}
+        required
         />
-        <textarea
+        </div>
+        <div className="p-1 gap-3 mt-2 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
+         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Event Description"
+           className="bg-secondary border-none p-3 pl-5 w-full outline-none flex-1"
           required
         />
-        <input
+        </div>
+        <div className="p-1 gap-3 mt-2 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
+          <input
           type="text"
           value={image}
           onChange={(e) => setImage(e.target.value)}
+           className="bg-secondary border-none p-3 pl-5 w-full outline-none flex-1"
           placeholder="Image URL"
           required
         />
+        </div>
+        
+       
+       
+        <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
         <DatePickerWithRange date={date} setDate={setDate} />
-        <div className="space-y-4">
+        </div>
+        <div className="space-y-2">
           <h2 className="text-lg font-semibold">Categories</h2>
           <div className="grid grid-cols-2 gap-4">
             {categories && categories.length > 0 && categories.map((category, index) => (
@@ -171,65 +186,96 @@ export const EditEvent = () => {
             Add Category
           </button>
         </div>
+       
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Promo Code</h2>
+          <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
           <input
             type="text"
             value={promoCode}
             onChange={(e) => setPromoCode(e.target.value)}
             placeholder="Promo Code"
+             className="bg-secondary border-none p-2 pl-5 w-full outline-none flex-1"
           />
-          <div className="flex items-center">
+          </div>
+          <div className="p-2 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
+          <div className="flex gap-3 items-center justify-stretch pl-3 ">
+            <div>
             <input
               type="radio"
               name="discountType"
               value="percentage"
               checked={discountType === "percentage"}
               onChange={() => setDiscountType("percentage")}
+               className="bg-secondary border-none "
             />
             <label className="ml-2">Percentage</label>
+            </div>
+            <div>
             <input
               type="radio"
               name="discountType"
               value="fixed"
               checked={discountType === "fixed"}
               onChange={() => setDiscountType("fixed")}
+               className="bg-secondary border-none"
             />
             <label className="ml-2">Fixed Amount</label>
+            </div>
+             
+            </div>
           </div>
+
+
           {discountType === "percentage" && (
+             <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
             <input
               type="text"
               value={discountPercentage}
               onChange={(e) => setDiscountPercentage(e.target.value)}
               placeholder="Discount Percentage"
+               className="bg-secondary border-none p-2 pl-5 w-full outline-none flex-1"
             />
+            </div>
           )}
           {discountType === "fixed" && (
+             <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
             <input
               type="text"
               value={discountPrice}
               onChange={(e) => setDiscountPrice(e.target.value)}
               placeholder="Discount Price"
+              className="bg-secondary border-none p-2 pl-5 w-full outline-none flex-1"
             />
+            </div>
           )}
+           <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
           <input
             type="text"
             value={maxUses}
             onChange={(e) => setMaxUses(e.target.value)}
+            className="bg-secondary border-none p-2 pl-5 w-full outline-none flex-1"
             placeholder="Max Uses"
           />
+          </div>
+          <div className="p-1 mt-2 gap-3 flex flex-col  shadow-custom rounded-sm overflow-hidden dark:border border-background dark:border-[1px]">
+           
           <input
             type="date"
             value={expiryDate}
             onChange={(e) => setExpiryDate(e.target.value)}
+            className="bg-secondary border-none p-2 pl-5 w-full outline-none flex-1"
             placeholder="Expiry Date"
           />
         </div>
-        <Button type="submit" disabled={loading}>
+        </div>
+        <div className="flex justify-center">
+        <Button className="p-2 mt-2 " type="submit" disabled={loading}>
           {loading ? "Updating..." : "Update Event"}
         </Button>
+        </div>
       </form>
+      </div>
     </div>
   );
 };

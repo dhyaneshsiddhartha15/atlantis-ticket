@@ -84,9 +84,24 @@ const BookEvents = () => {
             });
         }
 
+        // const selectedTicketTypes = Object.keys(ticketCounts).filter(
+        //     (typeId) => ticketCounts[typeId] > 0
+        // );
+        const selectedTicketTypes = types
+        .filter((ticketType) => ticketCounts[ticketType._id] > 0)
+        .map((ticketType) => ticketType.category);
+        
+        if (selectedTicketTypes.length === 0) {
+            return toast({
+                title: "Promo Code Error",
+                description: "Please select at least one ticket type.",
+                variant: "destructive",
+            });
+        }
         try {
             const response = await axios.post(`${BASE_URL}/events/apply-promo/${eventId}`, {
                 promoCode: code,
+                ticketType: selectedTicketTypes,
             });
 
             if (response.data.success) {

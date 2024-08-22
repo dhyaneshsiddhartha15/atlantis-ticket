@@ -5,6 +5,7 @@ import { Calendar } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+import { useSelector } from "react-redux";
 
 const EventSummary = () => {
     const [event, setEvent] = useState(null);
@@ -13,7 +14,9 @@ const EventSummary = () => {
     const BASE_URL = import.meta.env.VITE_BASE_URL;
     const { toast } = useToast(); // Importing toast
     const navigate = useNavigate();
-
+    const { user } = useSelector((state) => state.user);
+    const loggedInUserId = user?.id 
+    const currentUser = event?.creatorId
     const handleDelete = async () => {
         try {
             setLoading(true);
@@ -55,19 +58,23 @@ const EventSummary = () => {
         <div>
             {event ? (
                 <>
+                {/* this need to show only for the admin not for all user  */}
+
                     <div
                         className="relative min-h-[30vh] max-h-[40vh] w-full bg-cover bg-center rounded-lg"
                         style={{ backgroundImage: `url(${event?.images[0]})` }}
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black opacity-50">
                             <div className="absolute bottom-5 right-10 flex gap-4">
+                               {loggedInUserId === currentUser && (                               
+                                 <>
                                 <Button 
                                     variant="outline" 
                                     color="danger"
                                     onClick={handleDelete}
                                     disabled={loading}
                                 >
-                                    {loading ? 'Deleting...' : 'Delete Event'}
+                                    {loading ? 'Deleting...' : 'Delete Events'}
                                 </Button>
                                 <Button 
                                     variant="outline"
@@ -78,9 +85,12 @@ const EventSummary = () => {
                                         Edit Event
                                     </Link>
                                 </Button>
+                                </>
+                               )}
                             </div>
                         </div>
                     </div>
+                    {/* upto here */}
                     <div className="flex justify-between items-center py-5 bg-secondary mt-5 rounded-lg p-5 flex-wrap">
                         <div className="flex justify-center items-center gap-3">
                             <Calendar className="w-8 h-8 " />

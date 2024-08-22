@@ -34,6 +34,11 @@ const eventSchema = new mongoose.Schema(
       ref: "Promo",
       default: null,   
     },
+    creatorId: {  
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User", 
+      required: true,
+    },
   },
   { timestamps: true },
 );
