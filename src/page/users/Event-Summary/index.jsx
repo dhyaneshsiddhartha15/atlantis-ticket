@@ -16,7 +16,8 @@ const EventSummary = () => {
     const navigate = useNavigate();
     const { user } = useSelector((state) => state.user);
     const loggedInUserId = user?.id 
-    const currentUser = event?.creatorId
+    console.log("evnet --------",event)
+    const currentUser = event?.creatorId._id
     const handleDelete = async () => {
         try {
             setLoading(true);
@@ -66,6 +67,9 @@ const EventSummary = () => {
                     >
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black opacity-50">
                             <div className="absolute bottom-5 right-10 flex gap-4">
+                                {/* <h1>{loggedInUserId}</h1>
+                                <h1>{currentUser}</h1>
+                                <h1>{currentUser}</h1>  */}
                                {loggedInUserId === currentUser && (                               
                                  <>
                                 <Button 
@@ -86,7 +90,7 @@ const EventSummary = () => {
                                     </Link>
                                 </Button>
                                 </>
-                               )}
+                     )} 
                             </div>
                         </div>
                     </div>
