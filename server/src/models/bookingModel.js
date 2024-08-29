@@ -1,32 +1,48 @@
-// models/Booking.js
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const BookingSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    clientId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Client",
-      required: true,
-    },
-    eventId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Event",
-      required: true,
-    },
-    itemId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Item",
-      required: true,
-    },
-
-    isConfirmed: { type: String, default: "Booked" },
+const bookingSchema = new mongoose.Schema({
+  eventId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Event',
+    required: true
   },
-  { timestamps: true },
-);
+  emailId: {
+    type: String,
+    required: true
+  },
+  tickets: [{
+    type: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TicketType'
+    },
+    quantity: Number,
+    totalCost: Number
+  }],
+  totalCost: {
+    type: Number,
+    required: true
+  },
+  discount: {
+    type: Number,
+    default: 0
+  },
+  transactionId: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['Pending', 'Paid', 'Failed', 'Cancelled'],
+    default: 'Pending'
+  },
+  visaId: String,
+  expiresAt: {
+    type: Date,
+    required: true
+  }
+}, { timestamps: true });
 
-module.exports = mongoose.model("Booking", BookingSchema);
+const Booking = mongoose.model('Booking', bookingSchema);
+
+module.exports = Booking;

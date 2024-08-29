@@ -15,6 +15,8 @@ const BookEvents = () => {
     const [code, setCode] = useState("");
     const [originalPrices, setOriginalPrices] = useState({});
     const [discountInfo, setDiscountInfo] = useState(null);
+    const [paymentInitiated, setPaymentInitiated] = useState(false);
+    const [loading, setLoading] = useState(false);
     const { user } = useSelector((state) => state.user);
     const BASE_URL = import.meta.env.VITE_BASE_URL;
     const { toast } = useToast();
@@ -25,7 +27,6 @@ const BookEvents = () => {
         const getTicketTypes = async () => {
             try {
                 const res = await axios.get(`${BASE_URL}/tickets/types/${eventId}`);
-                console.log("Response is", res);
                 const ticketTypes = res.data.ticketTypes;
                 setTypes(ticketTypes);
 
@@ -65,8 +66,8 @@ const BookEvents = () => {
         setOriginalTotalCost(total);
 
         if (discount) {
-            if (discount.discountType === 'percentage') {
-                total *= (1 - discount.discountValue / 100);
+            if (discount.discountType === "percentage") {
+                total *= 1 - discount.discountValue / 100;
             } else {
                 total -= discount.discountValue;
             }
@@ -84,9 +85,24 @@ const BookEvents = () => {
             });
         }
 
+        // const selectedTicketTypes = Object.keys(ticketCounts).filter(
+        //     (typeId) => ticketCounts[typeId] > 0
+        // );
+        const selectedTicketTypes = types
+        .filter((ticketType) => ticketCounts[ticketType._id] > 0)
+        .map((ticketType) => ticketType.category);
+        
+        if (selectedTicketTypes.length === 0) {
+            return toast({
+                title: "Promo Code Error",
+                description: "Please select at least one ticket type.",
+                variant: "destructive",
+            });
+        }
         try {
             const response = await axios.post(`${BASE_URL}/events/apply-promo/${eventId}`, {
                 promoCode: code,
+                ticketType: selectedTicketTypes,
             });
 
             if (response.data.success) {
@@ -114,29 +130,22 @@ const BookEvents = () => {
         }
     };
 
-    const handlePayment = async (setLoading) => {
-        const tickets = Object.entries(ticketCounts)
-            .filter(([_, quantity]) => quantity > 0)
-            .map(([type, quantity]) => ({ type, quantity }));
-
-        if (tickets.length === 0) {
-            return toast({
-                title: "Payment Incomplete",
-                description: "Please select at least one ticket before proceeding.",
-                variant: "destructive",
-            });
-        }
-
-        if (!email) {
-            return toast({
-                title: "Email Required",
-                description: "Please provide your email address before proceeding.",
-                variant: "destructive",
-            });
-        }
-
+    const handleBookTicket = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
+            const tickets = Object.entries(ticketCounts)
+                .filter(([_, quantity]) => quantity > 0)
+                .map(([type, quantity]) => ({ type, quantity }));
+
+            if (tickets.length === 0) {
+                setLoading(false);
+                return toast({
+                    title: "Booking Incomplete",
+                    description: "Please select at least one ticket before proceeding.",
+                    variant: "destructive",
+                });
+            }
+
             const response = await axios.post(`${BASE_URL}/tickets/bookings`, {
                 emailId: email,
                 eventId: eventId,
@@ -144,26 +153,27 @@ const BookEvents = () => {
                 promoCode: code,
             });
 
-            console.log("Response from server:", response);
-
             if (response.status === 201) {
+                const { payUrl } = response.data;
+                setPaymentInitiated(true);
+                window.location.href = payUrl;
                 toast({
-                    title: "Payment Successful",
-                    description: response.data.message || "Your payment has been processed successfully. Thank you for booking with us!",
+                    title: "Tickets Booked",
+                    description: "Your tickets have been booked. Please proceed to payment.",
+                    variant: "success",
                 });
-                navigate("/");
             } else {
                 toast({
-                    title: "Payment Failed",
-                    description: response.data.message || "There was an issue with processing your payment. Please try again later.",
+                    title: "Booking Failed",
+                    description: response.data.message || "There was an issue with booking your tickets. Please try again later.",
                     variant: "destructive",
                 });
             }
         } catch (error) {
             console.error("Error booking tickets:", error);
             toast({
-                title: "Payment Failed",
-                description: "There was an issue with processing your payment. Please try again later.",
+                title: "Booking Failed",
+                description: error.response?.data?.message || "There was an issue with booking your tickets. Please try again later.",
                 variant: "destructive",
             });
         } finally {
@@ -172,7 +182,7 @@ const BookEvents = () => {
     };
 
     return (
-        <div>
+        <div className="book-events-container">
             <div className="flex flex-wrap gap-5 mb-5">
                 {types.map((type) => (
                     <TicketBox
@@ -192,11 +202,12 @@ const BookEvents = () => {
                 originalTotalCost={originalTotalCost}
                 code={code}
                 setCode={setCode}
-                handlePayment={handlePayment}
                 setEmail={setEmail}
                 email={email}
                 handleApplyPromoCode={handleApplyPromoCode}
-                discountInfo={discountInfo}
+                handleBookTicket={handleBookTicket}
+                paymentInitiated={paymentInitiated}
+                loading={loading}
             />
         </div>
     );

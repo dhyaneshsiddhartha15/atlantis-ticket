@@ -29,10 +29,17 @@ const eventSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    promoCode: {
+    promoCodes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Promo",   // Reference to the Promo model
+        default: [],  // Default value is null
+      },
+    ],
+    creatorId: {  
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Promo",
-      default: null,   
+      ref: "User", 
+      // required: true,
     },
   },
   { timestamps: true },

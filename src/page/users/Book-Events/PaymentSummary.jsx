@@ -1,18 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import React, { useState } from "react";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { useParams } from "react-router-dom";
 
 const PaymentSummary = ({
     code,
@@ -22,18 +11,83 @@ const PaymentSummary = ({
     handlePayment,
     setEmail,
     email,
-    handleApplyPromoCode
+    handleApplyPromoCode,
+    handleBookTicket,  
 }) => {
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [applyingPromo, setApplyingPromo] = useState(false);
+    const [booking, setBooking] = useState(false);
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const { eventId } = useParams();
 
     const onApplyPromoCode = async () => {
         setApplyingPromo(true);
-        await handleApplyPromoCode();
-        setApplyingPromo(false);
+        try {
+            await handleApplyPromoCode(code);
+        } catch (error) {
+            console.error("Error applying promo code:", error);
+            toast({
+                title: "Promo Code Error",
+                description: "An error occurred while applying the promo code. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setApplyingPromo(false);
+        }
+    };
+    const onBookTicket = async () => {
+        if (!email || !emailRegex.test(email.trim())) {
+            toast({
+                title: "Invalid Email",
+                description: "Please enter a valid email address.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setBooking(true);
+        try {
+            await handleBookTicket(); 
+            toast({
+                title: "Ticket Booked",
+                description: "Your ticket has been successfully booked.",
+                variant: "default",
+            });
+        } catch (error) {
+            console.error("Booking error:", error);
+            toast({
+                title: "Booking Error",
+                description: "An error occurred while booking your ticket. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setBooking(false);
+        }
+    };
+
+    const onPayWithSkipCash = async () => {
+        if (!email || !emailRegex.test(email.trim())) {
+            toast({
+                title: "Invalid Email",
+                description: "Please enter a valid email address.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await handlePayment(setLoading); 
+        } catch (error) {
+            console.error("Payment error:", error);
+            toast({
+                title: "Payment Error",
+                description: "An error occurred while processing your payment. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -63,77 +117,48 @@ const PaymentSummary = ({
             </div>
             <div>
                 <p>
-                    <span className="text-xl">Sub Total :</span> {originalTotalCost}
+                    <span className="text-xl">Sub Total:</span> {originalTotalCost}
                 </p>
                 {originalTotalCost !== totalCost && (
                     <p>
-                        <span className="text-xl">Discounted Total :</span> {totalCost}
+                        <span className="text-xl">Discounted Total:</span> {totalCost}
                     </p>
                 )}
                 <p>
                     <span className="text-2xl">Total:</span> {totalCost}
                 </p>
             </div>
-            <Dialog>
-                <DialogTrigger asChild>
-                    <Button className="w-full md:w-1/2" disabled={loading}>
-                        {loading ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                            "Proceed to Payment"
-                        )}
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Complete Your Booking</DialogTitle>
-                        <DialogDescription>
-                            To finalize your booking, please enter your email
-                            address. A confirmation email with the booking
-                            details will be sent to you.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex items-center space-x-2">
-                        <div className="grid flex-1 gap-2">
-                            <input
-                                type="email"
-                                className="bg-input rounded-md p-3 pl-5 w-full shadow-custom"
-                                placeholder="Your email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter className="sm:justify-start">
-                        <DialogClose asChild>
-                            <Button
-                                onClick={() => {
-                                    if (!email || email.trim().length === 0) {
-                                        return toast({
-                                            title: "Payment Failed",
-                                            description:
-                                                "Please enter a valid email address.",
-                                            variant: "destructive",
-                                        });
-                                    }
-                                    if (!emailRegex.test(email.trim())) {
-                                        return toast({
-                                            title: "Payment Failed",
-                                            description:
-                                                "The email address you entered is invalid. Please enter a valid email address.",
-                                            variant: "destructive",
-                                        });
-                                    }
-
-                                    handlePayment(setLoading);
-                                }}
-                            >
-                                Confirm Payment
-                            </Button>
-                        </DialogClose>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            <div className="space-y-2">
+                <input
+                    type="email"
+                    className="bg-input rounded-md p-3 pl-5 w-full shadow-custom"
+                    placeholder="Your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                />
+                <Button 
+                    className="w-full md:w-1/2" 
+                    disabled={booking}
+                    onClick={onBookTicket}
+                >
+                    {booking ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        "Book Ticket"
+                    )}
+                </Button>
+                {/* <Button 
+                    className="w-full md:w-1/2 mt-3" 
+                    disabled={loading || booking}
+                    onClick={onPayWithSkipCash}
+                >
+                    {loading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        "Pay with SkipCash"
+                    )}
+                </Button> */}
+            </div>
         </div>
     );
 };

@@ -80,13 +80,14 @@ const Events = () => {
             console.log('Promo Details:', promoDetails); // Debugging
             setLoadingInBox(true);
             setLoading(true);
-    
+           console.log("user from redux",user)
             const eventDetails = {
                 name: title,
                 description: description,
                 images: [image],
                 dates: date,
-                promoDetails: promoDetails
+                promoDetails: promoDetails,
+                userId:user.id
             };
     
             const res = await axios.post(`${BASE_URL}/events`, {
