@@ -72,7 +72,7 @@ const CreateEvents = () => {
 
     const { user } = useSelector((state) => state.user);
     const navigate = useNavigate();
-
+    console.log("user,......", user)
     const BASE_URL = import.meta.env.VITE_BASE_URL;
 
     const [servicesList, setServicesList] = useState([]);
@@ -140,6 +140,7 @@ const CreateEvents = () => {
                 photograph: photograph,
                 decoration: decoration,
                 dates: date,
+
             };
 
             // Send the data as JSON
@@ -196,6 +197,7 @@ const CreateEvents = () => {
 
     return (
         <div className="min-h-screen flex flex-col justify-between ">
+
             {showTitleField && (
                 <EventTitle
                     setShowTitleField={setShowTitleField}
@@ -208,7 +210,7 @@ const CreateEvents = () => {
                     date={tempDate}
                     setDate={setTempDate}
                     iosdate={date}
-                />
+                /> 
             )}
             <Topbar
                 services={services}

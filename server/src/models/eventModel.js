@@ -39,7 +39,11 @@ const eventSchema = new mongoose.Schema(
     creatorId: {  
       type: mongoose.Schema.Types.ObjectId,
       ref: "User", 
+<<<<<<< HEAD
       // required: true,
+=======
+      required: true,
+>>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
     },
   },
   { timestamps: true },

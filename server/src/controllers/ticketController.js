@@ -59,6 +59,20 @@ const Emailsignature = `
 </div>
 `;
 
+<<<<<<< HEAD
+=======
+exports.getTicketTypes = catchAsync(async (req, res, next) => {
+  const { eventId } = req.params;
+  console.log("Event id is", eventId);
+  const ticketTypes = await TicketType.find({ eventId });
+  console.log("Ticket Type is", ticketTypes);
+  res.status(200).json({
+    message: "success",
+    ticketTypes,
+  });
+});
+// bookticket.........
+>>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
 exports.bookTickets = catchAsync(async (req, res) => {
     const { eventId, emailId, tickets, promoCode } = req.body;
   
@@ -73,6 +87,7 @@ exports.bookTickets = catchAsync(async (req, res) => {
         return res.status(400).json({ success: false, message: "Invalid tickets." });
     }
     let totalQuantity = 0, totalCost = 0;
+<<<<<<< HEAD
     const ticketDetails = tickets.map(ticket => {
         const ticketType = ticketTypes.find(type => type._id.toString() === ticket.type.toString());
         const cost = ticketType.price * ticket.quantity;
@@ -108,6 +123,70 @@ exports.bookTickets = catchAsync(async (req, res) => {
         } else {
             return res.status(400).json({ success: false, message: "Invalid promo code." });
         }
+=======
+    let  discount = 0;
+    
+    const ticketDetails = tickets.map((ticket) => {
+      const ticketType = ticketTypes.find((type) => type._id.toString() === ticket.type.toString());
+      const cost = ticketType.price * ticket.quantity;
+      totalQuantity += ticket.quantity;
+      totalCost += cost;
+      return {
+        eventId,
+        type: ticket.type,
+        totalCost: cost,
+        quantity: ticket.quantity,
+        purchaseDate: new Date(),
+      };
+    });
+  
+    // Apply promo code
+    // let discount = 0;
+    if (promoCode) {
+      const promo = await PromoCode.findOne({ code: promoCode, event: eventId});
+      // console.log("promo",promo);
+      // console.log("Promo code is",promoCode);
+      // if(promo.applicableCategories !== promoCode.applicableCategories){
+      //   return res.status(400).json({success:false, message:"promo code is not applicable"})
+      // }
+      if (promo) {
+        if (promo.expiresAt && promo.expiresAt < new Date()) {
+          return res.status(400).json({ success: false, message: "Promo code expired." });
+        }
+        if (promo.maxUses <= promo.currentUses) {
+          return res.status(400).json({ success: false, message: "Promo code usage limit exceeded." });
+        }
+
+        // const applicableTickets = tickets.filter(ticket =>
+        //   promo.applicableCategories.includes(ticketType.category)
+        // );
+        const applicableTickets = tickets.filter(ticket => {
+          const ticketType = ticketTypes.find(type => type._id.toString() === ticket.type.toString());
+          return promo.applicableCategories.includes(ticketType.category);
+        });
+
+      if (applicableTickets.length === 0) {
+        return res.status(400).json({ success: false, message: "Promo code is not applicable to the selected ticket types." });
+      }
+      
+
+        applicableTickets.forEach(ticket => {
+        const ticketType = ticketTypes.find((type) => type._id.toString() === ticket.type.toString());
+        const cost = ticketType.price * ticket.quantity;
+
+        if (promo.discountType === 'fixed') {
+          discount += promo.discountPrice;
+        } else if (promo.discountType === 'percentage') {
+          discount += (promo.discountPercentage / 100) * cost;
+        }
+      });
+
+        promo.currentUses += 1;
+        await promo.save();
+      } else {
+        return res.status(400).json({ success: false, message: "Invalid promo code." });
+      }
+>>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
     }
   
     totalCost -= discount;
