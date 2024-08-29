@@ -62,7 +62,7 @@ const Emailsignature = `
     </div>
 </div>
 `;
-
+const generateQRCodeUrl = (url) => `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
 exports.bookTickets = catchAsync(async (req, res) => {
     const { eventId, emailId, tickets, promoCode } = req.body;
   
@@ -160,6 +160,7 @@ exports.bookTickets = catchAsync(async (req, res) => {
         if (!payUrl) {
             return res.status(500).json({ message: "Failed to generate payment URL" });
         }
+            const  qrCodeData= generateQRCodeUrl(payUrl);
 
         const booking = new Booking({
             eventId,
@@ -174,35 +175,153 @@ exports.bookTickets = catchAsync(async (req, res) => {
         await booking.save();
         setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
 
-        const emailContent = `
-       <h3 style="font-family: Arial, sans-serif; color: #333;">
-           Hello ${emailId.split("@")[0]},
-         </h3>
-        <p style="font-family: Arial, sans-serif; color: #333;">
-           Thank you for booking tickets for ${event.name}. We are thrilled to have you join us for this exciting event.
-      </p>
-           <p style="font-family: Arial, sans-serif; color: #333;">
-           Here are the booking details:
-           </p>
-         <h4 style="font-family: Arial, sans-serif; color: #333;">
-             Event Name: ${event.name}
-           </h4>
-           <h4 style="font-family: Arial, sans-serif; color: #333;">
-             Number Of Tickets: ${totalQuantity}
-         </h4>
-            Total Amount: ${totalCost} QAR
-               </h4>
-               <p style="font-family: Arial, sans-serif; color: #333;">
-                To complete your payment, please click on the following link:
-                <a href="${payUrl}" style="color: #007bff;">Complete Payment</a>
-            </p>
-            <p style="font-family: Arial, sans-serif; color: #333;">
-                Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
-            </p>
-           </p>
-               <br>
-                ${Emailsignature}
-              `;
+        const emailContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: #333;
+            position: relative;
+            padding: 30px;
+            overflow: hidden;
+            border: 6px solid #800000;
+        }
+        .ticket-content {
+            width: 100%;
+            position: relative;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .button {
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #436ea5;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            align-self: flex-start;
+            margin-top: 20px;
+        }
+        .qr-code {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            z-index: 2;
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #800000;
+            display: flex;
+            align-items: center;
+        }
+        .signature img {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+        }
+        .signature h1 {
+            color: #921A40;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ticket-content">
+            <div class="qr-code">
+                <img src="${qrCodeData}" alt="QR Code">
+            </div>
+            <div class="content">
+                <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
+                <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
+                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
+                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+                <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
+                <p style="color: #800000; margin: 20px 0; font-weight: bold;">
+                    Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+                </p>
+            </div>
+        </div>
+        <div class="signature">
+            <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
+            <h1><b>Atlantis</b></h1>
+        </div>
+    </div>
+</body>
+</html>
+`;
+
+      //   const emailContent = `
+      //   <div style="font-family: Arial, sans-serif; background-color: #04030C; color: #fff; padding: 20px; border-radius: 15px; width: 700px; margin: 0 auto; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
+      //     <h3 style="color: #fff; margin-bottom: 20px;">
+      //       Hello ${emailId.split("@")[0]},
+      //     </h3>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Thank you for booking tickets for <span style="font-weight: bold;">${event.name}</span>. We are thrilled to have you join us for this exciting event.
+      //     </p>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Here are the booking details:
+      //     </p>
+      //     <div style="margin-bottom: 20px;">
+      //       <h4 style="color: #fff; font-weight: bold;">Event Name: ${event.name}</h4>
+      //       <h4 style="color: #fff; font-weight: bold;">Number Of Tickets: ${totalQuantity}</h4>
+      //       <h4 style="color: #fff; font-weight: bold;">Total Amount: ${totalCost} QAR</h4>
+      //     </div>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       To complete your payment, please use one of the following options:
+      //     </p>
+      //     <div style="display: flex; align-items: center; margin-bottom: 20px;">
+      //       <div style="margin-right: 20px;">
+      //         <img src="${qrCodeData}" alt="QR Code" style="width: 150px; height: 150px; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3); border-radius: 10px;" />
+      //       </div>
+      //       <div>
+      //         <a href="${payUrl}" style="background-color: #436ea5; color: #fff; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
+      //           Complete Payment
+      //         </a>
+      //       </div>
+      //     </div>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+      //     </p>
+      //     <br>
+      //     ${Emailsignature}
+      //   </div>
+      // `;
+      
            await transporter.sendMail({
               to: emailId,
               subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
