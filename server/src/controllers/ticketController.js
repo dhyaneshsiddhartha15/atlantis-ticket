@@ -8,11 +8,13 @@ const nodemailer = require("nodemailer");
 const mongoose = require("mongoose");
 const PromoCode = require("../models/promoCode");
 const Payment = require("../models/paymentModel");
-const cryptojs = require('crypto-js');
+const CryptoJS = require('crypto-js');
 const axios = require('axios');
 const { v4: uuidv4 } = require("uuid");
 const Booking = require("../models/bookingModel");
 const QRCode = require('qrcode');
+const crypto = require('crypto');
+
 const generatePaymentRequestSKIP = require("../utils/generatePaymentSKIP");
 require("dotenv").config();
 
@@ -42,9 +44,8 @@ function calculateSignature(payload) {
       .map(field => `${field}=${payload[field]}`)
       .join(',');
 
-  const hmac = crypto.createHmac('sha256', WEBHOOK_KEY);
-  hmac.update(data);
-  return hmac.digest('base64');
+  const hmac = CryptoJS.HmacSHA256(data, WEBHOOK_KEY);
+  return CryptoJS.enc.Base64.stringify(hmac);
 }
 
 const Emailsignature = `
