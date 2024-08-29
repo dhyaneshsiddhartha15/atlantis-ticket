@@ -299,10 +299,8 @@ exports.createEvent = catchAsync(async (req, res, next) => {
 
     const savedEvent = await newEvent.save();
     console.log("saved event",savedEvent);
-<<<<<<< HEAD
     console.log("Request Body userId:", userId);
-=======
->>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
+
     
     const eventId = savedEvent._id;
 
@@ -743,16 +741,6 @@ exports.updateEvent = catchAsync(async (req, res, next) => {
     });
   }
 });
-<<<<<<< HEAD
-=======
-
-
-
-
-
-
-
->>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
 exports.getAllEvents = catchAsync(async (req, res, next) => {
   const data = await getEvensByCondition({ isPublished: true });
 
@@ -1265,11 +1253,7 @@ exports.getPromoCode = catchAsync(async (req, res, next) => {
       return next(new AppError(500, "Internal Server Error"));
   }
 });
-<<<<<<< HEAD
-//APPLY PROMO CODE.////
-=======
->>>>>>> 0d70d8566a856170b96a324e55f8912bee810f59
-// applying promo code in here 
+
 exports.applyPromoCode = catchAsync(async (req, res, next) => {
   try {
     const { promoCode,ticketType } = req.body;
