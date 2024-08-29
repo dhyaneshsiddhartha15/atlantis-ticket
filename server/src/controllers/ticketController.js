@@ -265,7 +265,7 @@ console.log("Webhook auth heade ris",authHeader);
   }
 
   const calculatedSignature = calculateSignature(req.body);
-  console.log("Calculated Signature is",calculateSignature);
+  console.log("Calculated Signature is",calculatedSignature);
   if (authHeader !== calculatedSignature) {
       return res.status(401).json({
           success: false,
