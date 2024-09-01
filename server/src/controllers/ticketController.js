@@ -163,115 +163,115 @@ exports.bookTickets = catchAsync(async (req, res) => {
         await booking.save();
         setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
 
-        const emailContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            color: #333;
-            position: relative;
-            padding: 30px;
-            overflow: hidden;
-            border: 6px solid #800000;
-        }
-        .ticket-content {
-            width: 100%;
-            position: relative;
-        }
-        .content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .button {
-            display: inline-block;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: #436ea5;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: #fff;
-            text-decoration: none;
-            align-self: flex-start;
-            margin-top: 20px;
-        }
-        .qr-code {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            z-index: 2;
-        }
-        .signature {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #800000;
-            display: flex;
-            align-items: center;
-        }
-        .signature img {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-        }
-        .signature h1 {
-            color: #921A40;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="ticket-content">
-            <div class="qr-code">
-                <img src="${qrCodeData}" alt="QR Code">
-            </div>
-            <div class="content">
-                <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
-                <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
-                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
-                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
-                <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
-                <p style="color: #800000; margin: 20px 0; font-weight: bold;">
-                    Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
-                </p>
-            </div>
-        </div>
-        <div class="signature">
-            <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
-            <h1><b>Atlantis</b></h1>
-        </div>
-    </div>
-</body>
-</html>
-`;
+//         const emailContent = `<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <style>
+//         body {
+//             font-family: Arial, sans-serif;
+//             background-color: #ffffff;
+//             margin: 0;
+//             padding: 20px;
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             min-height: 100vh;
+//         }
+//         .container {
+//             width: 100%;
+//             max-width: 600px;
+//             background-color: #ffffff;
+//             border-radius: 15px;
+//             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+//             color: #333;
+//             position: relative;
+//             padding: 30px;
+//             overflow: hidden;
+//             border: 6px solid #800000;
+//         }
+//         .ticket-content {
+//             width: 100%;
+//             position: relative;
+//         }
+//         .content {
+//             position: relative;
+//             z-index: 1;
+//             display: flex;
+//             flex-direction: column;
+//             gap: 15px;
+//         }
+//         .button {
+//             display: inline-block;
+//             font-size: 16px;
+//             font-weight: bold;
+//             background-color: #436ea5;
+//             padding: 12px 24px;
+//             border-radius: 25px;
+//             color: #fff;
+//             text-decoration: none;
+//             align-self: flex-start;
+//             margin-top: 20px;
+//         }
+//         .qr-code {
+//             position: absolute;
+//             top: 20px;
+//             right: 20px;
+//             width: 100px;
+//             height: 100px;
+//             background-color: #f0f0f0;
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+//             border-radius: 10px;
+//             z-index: 2;
+//         }
+//         .signature {
+//             margin-top: 30px;
+//             padding-top: 20px;
+//             border-top: 2px solid #800000;
+//             display: flex;
+//             align-items: center;
+//         }
+//         .signature img {
+//             width: 60px;
+//             height: 60px;
+//             margin-right: 15px;
+//         }
+//         .signature h1 {
+//             color: #921A40;
+//             font-size: 1.5rem;
+//             margin: 0;
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="container">
+//         <div class="ticket-content">
+//             <div class="qr-code">
+//                 <img src="${qrCodeData}" alt="QR Code">
+//             </div>
+//             <div class="content">
+//                 <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
+//                 <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
+//                 <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
+//                 <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+//                 <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
+//                 <p style="color: #800000; margin: 20px 0; font-weight: bold;">
+//                     Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+//                 </p>
+//             </div>
+//         </div>
+//         <div class="signature">
+//             <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
+//             <h1><b>Atlantis</b></h1>
+//         </div>
+//     </div>
+// </body>
+// </html>
+// `;
 
       //   const emailContent = `
       //   <div style="font-family: Arial, sans-serif; background-color: #04030C; color: #fff; padding: 20px; border-radius: 15px; width: 700px; margin: 0 auto; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
@@ -358,200 +358,162 @@ const cancelBooking = async (bookingId) => {
 
 //Webhook//
 exports.handleWebhook = catchAsync(async (req, res) => {
-  console.log("Web Hook Called----");
-  const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
-  const authHeader = req.headers['authorization'];
-console.log("Webhook auth heade ris",authHeader);
-  if (!PaymentId || !Amount || !StatusId || !TransactionId) {
+    console.log("Web Hook Called----");
+    const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
+    const authHeader = req.headers['authorization'];
+    console.log("Webhook auth header is", authHeader);
+  
+    if (!PaymentId || !Amount || !StatusId || !TransactionId) {
       return res.status(400).json({
-          success: false,
-          message: "Invalid webhook data.",
+        success: false,
+        message: "Invalid webhook data.",
       });
-  }
-  const calculatedSignature = calculateSignature(req.body);
-  console.log("Calculated Signature is",calculatedSignature);
-  if (authHeader !== calculatedSignature) {
+    }
+  
+    const calculatedSignature = calculateSignature(req.body);
+    console.log("Calculated Signature is", calculatedSignature);
+    if (authHeader !== calculatedSignature) {
       return res.status(401).json({
-          success: false,
-          message: "Invalid signature.",
+        success: false,
+        message: "Invalid signature.",
       });
-  }
-
-  const booking = await Booking.findOne({ transactionId: TransactionId });
-  if (!booking) {
+    }
+  
+    const booking = await Booking.findOne({ transactionId: TransactionId });
+    if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found." });
-  }
-
-  const event = await Event.findById(booking.eventId);
-  if (!event) {
+    }
+  
+    const event = await Event.findById(booking.eventId);
+    if (!event) {
       return res.status(404).json({ success: false, message: "Event not found." });
-  }
-
-  let emailSubject, emailContent;
-
-  switch (parseInt(StatusId)) {
-      case 2: 
-          booking.paymentStatus = 'Completed';
-          emailSubject = `Payment Confirmed: Your tickets for ${event.name}`;
-          emailContent = `
- <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            color: #333;
-            position: relative;
-            padding: 30px;
-            overflow: hidden;
-            border: 6px solid #800000;
-        }
-        .ticket-content {
-            width: 100%;
-            position: relative;
-        }
-        .content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .button {
-            display: inline-block;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: #436ea5;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: #fff;
-            text-decoration: none;
-            align-self: flex-start;
-            margin-top: 20px;
-        }
-        .qr-code {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            z-index: 2;
-        }
-        .signature {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #800000;
-            display: flex;
-            align-items: center;
-        }
-        .signature img {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-        }
-        .signature h1 {
-            color: #921A40;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="ticket-content">
-           <div class="qr-code">
-                <img src="${qrCodeData}" alt="QR Code">
-             </div>
-            <div class="content">
-                <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
-                <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
-                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
-                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+    }
+  
+    let emailSubject, emailContent;
+  
+    switch (parseInt(StatusId)) {
+      case 2:
+        booking.paymentStatus = 'Completed';
+        emailSubject = `Your Ticket for ${event.name}`;
+        emailContent = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: 'Arial', sans-serif;
+                background-color: #f4f4f4;
+                margin: 0;
+                padding: 20px;
+              }
+              .ticket {
+                background-color: #ffffff;
+                border-radius: 15px;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                overflow: hidden;
+                max-width: 400px;
+                margin: 0 auto;
+              }
+              .ticket-header {
+                background-color: #921A40;
+                color: white;
+                padding: 20px;
+                text-align: center;
+                font-size: 24px;
+                font-weight: bold;
+              }
+              .ticket-body {
+                padding: 20px;
+              }
+              .ticket-info {
+                margin-bottom: 15px;
+              }
+              .ticket-label {
+                font-weight: bold;
+                color: #555;
+              }
+              .ticket-value {
+                color: #333;
+              }
+              .qr-code {
+                text-align: center;
+                margin-top: 20px;
+              }
+              .qr-code img {
+                max-width: 150px;
+                height: auto;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="ticket">
+              <div class="ticket-header">
+                ${event.name}
+              </div>
+              <div class="ticket-body">
+                <div class="ticket-info">
+                  <span class="ticket-label">Attendee:</span>
+                  <span class="ticket-value">${booking.emailId.split("@")[0]}</span>
+                </div>
+                <div class="ticket-info">
+                  <span class="ticket-label">Total Tickets:</span>
+                  <span class="ticket-value">${booking.tickets.reduce((sum, ticket) => sum + ticket.quantity, 0)}</span>
+                </div>
+                <div class="ticket-info">
+                  <span class="ticket-label">Date:</span>
+                  <span class="ticket-value">${new Date(event.date).toLocaleDateString()}</span>
+                </div>
+                <div class="ticket-info">
+                  <span class="ticket-label">Venue:</span>
+                  <span class="ticket-value">${event.venue}</span>
+                </div>
+                <div class="qr-code">
+                  <img src="${qrCodeData}" alt="QR Code">
+                </div>
+              </div>
             </div>
-        </div>
-        <div class="signature">
-            <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
-            <h1><b>Atlantis</b></h1>
-        </div>
-    </div>
-</body>
-</html>
-          `;
-          break;
-      case 3: 
-          booking.paymentStatus = 'Failed';
-          emailSubject = `Payment Failed: Your tickets for ${event.name}`;
-          emailContent = `
-              <p>We're sorry, but your payment for ${event.name} tickets has failed.</p>
-              <p>Please try booking your tickets again. If you continue to experience issues, please contact our support team.</p>
-          `;
-          break;
-      case 4: 
-          booking.paymentStatus = 'Cancelled';
-          emailSubject = `Payment Cancelled: Your tickets for ${event.name}`;
-          emailContent = `
-              <p>Your payment for ${event.name} tickets has been cancelled.</p>
-              <p>If you did not intend to cancel this payment, please try booking your tickets again.</p>
-          `;
-          break;
+          </body>
+          </html>
+        `;
+        break;
+      case 3:
+        booking.paymentStatus = 'Failed';
+        emailSubject = `Payment Failed: Your tickets for ${event.name}`;
+        emailContent = `
+          <p>We're sorry, but your payment for ${event.name} tickets has failed.</p>
+          <p>Please try booking your tickets again. If you continue to experience issues, please contact our support team.</p>
+        `;
+        break;
+      case 4:
+        booking.paymentStatus = 'Cancelled';
+        emailSubject = `Payment Cancelled: Your tickets for ${event.name}`;
+        emailContent = `
+          <p>Your payment for ${event.name} tickets has been cancelled.</p>
+          <p>If you did not intend to cancel this payment, please try booking your tickets again.</p>
+        `;
+        break;
       default:
-          return res.status(400).json({
-              success: false,
-              message: "Unknown payment status.",
-          });
-  }
-
-  await booking.save();
-
-  const fullEmailContent = `
-      <h3 style="font-family: Arial, sans-serif; color: #333;">
-          Hello ${booking.emailId.split("@")[0]},
-      </h3>
-      ${emailContent}
-      <h4 style="font-family: Arial, sans-serif; color: #333;">
-          Event Name: ${event.name}
-      </h4>
-      <h4 style="font-family: Arial, sans-serif; color: #333;">
-          Number Of Tickets: ${booking.tickets.reduce((sum, ticket) => sum + ticket.quantity, 0)}
-      </h4>
-      <br>
-      ${Emailsignature}
-  `;
-
-  await transporter.sendMail({
+        return res.status(400).json({
+          success: false,
+          message: "Unknown payment status.",
+        });
+    }
+  
+    await booking.save();
+  
+    await transporter.sendMail({
       to: booking.emailId,
       subject: emailSubject,
-      html: fullEmailContent,
-  });
-
-  res.status(200).json({
+      html: emailContent,
+    });
+  
+    res.status(200).json({
       success: true,
       message: `Webhook processed successfully. Payment status: ${booking.paymentStatus}`,
+    });
   });
-});
-
 // exports.handleWebhook = async (req, res) => {
 //   try {
 //       console.log('Webhook received:', req.body);
