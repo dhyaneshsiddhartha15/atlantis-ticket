@@ -156,10 +156,10 @@ exports.bookTickets = catchAsync(async (req, res) => {
             discount,
             transactionId,
             paymentStatus: 'Pending',
-            // expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+            expiresAt: new Date(Date.now() + 15 * 60 * 1000)
         });
         await booking.save();
-        // setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
+        setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
 
 //         const emailContent = `<!DOCTYPE html>
 // <html lang="en">
@@ -325,34 +325,34 @@ exports.bookTickets = catchAsync(async (req, res) => {
     }
 });
 
-// const cancelBooking = async (bookingId) => {
-//     const booking = await Booking.findById(bookingId);
-//     if (booking && booking.paymentStatus === 'Pending') {
-//         booking.paymentStatus = 'Cancelled';
-//         await booking.save();
+const cancelBooking = async (bookingId) => {
+    const booking = await Booking.findById(bookingId);
+    if (booking && booking.paymentStatus === 'Pending') {
+        booking.paymentStatus = 'Cancelled';
+        await booking.save();
 
-//         const event = await Event.findById(booking.eventId);
-//         const emailContent = `
-//     <h3 style="font-family: Arial, sans-serif; color: #333;">
-//     Hello ${booking.emailId.split("@")[0]},
-//     </h3>
-//     <p style="font-family: Arial, sans-serif; color: #333;">
-//         We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
-//     </p>
-//     <p style="font-family: Arial, sans-serif; color: #333;">
-//         If you still wish to attend the event, please make a new booking.
-//     </p>
-//     <br>
-//     ${Emailsignature}
-// `;
+        const event = await Event.findById(booking.eventId);
+        const emailContent = `
+    <h3 style="font-family: Arial, sans-serif; color: #333;">
+    Hello ${booking.emailId.split("@")[0]},
+    </h3>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
+    </p>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        If you still wish to attend the event, please make a new booking.
+    </p>
+    <br>
+    ${Emailsignature}
+`;
 
-//         await transporter.sendMail({
-//             to: booking.emailId,
-//             subject: `Booking Cancelled: ${event.name}`,
-//             html: emailContent,
-//         });
-//     }
-// };
+        await transporter.sendMail({
+            to: booking.emailId,
+            subject: `Booking Cancelled: ${event.name}`,
+            html: emailContent,
+        });
+    }
+};
 
 //Webhook//
 exports.handleWebhook = catchAsync(async (req, res) => {
