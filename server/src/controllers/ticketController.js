@@ -14,10 +14,8 @@ const { v4: uuidv4 } = require("uuid");
 const Booking = require("../models/bookingModel");
 const QRCode = require('qrcode');
 const crypto = require('crypto');
-
 const generatePaymentRequestSKIP = require("../utils/generatePaymentSKIP");
 require("dotenv").config();
-
 const paymentGatewayDetails = {
   sandboxURL: "https://skipcashtest.azurewebsites.net",
   productionURL: "https://api.skipcash.app",
@@ -26,7 +24,6 @@ const paymentGatewayDetails = {
   clientId: process.env.SKIP_CASH_CLIENT_ID,
 };
 const WEBHOOK_KEY = process.env.SKIP_CASH_WEBHOOK_KEY;
-
 const transporter = nodemailer.createTransport({
   host: process.env.MAIL_HOST,
   port: 587,
@@ -93,8 +90,6 @@ exports.bookTickets = catchAsync(async (req, res) => {
         purchaseDate: new Date(),
       };
     });
-  
-    // Apply promo code
     let discount = 0;
     if (promoCode) {
       const promo = await PromoCode.findOne({ code: promoCode, event: eventId});
@@ -114,11 +109,9 @@ exports.bookTickets = catchAsync(async (req, res) => {
         if (applicableTickets.length === 0) {
           return res.status(400).json({ success: false, message: "Promo code is not applicable to the selected ticket types." });
         }
-      
         applicableTickets.forEach(ticket => {
           const ticketType = ticketTypes.find((type) => type._id.toString() === ticket.type.toString());
           const cost = ticketType.price * ticket.quantity;
-
           if (promo.discountType === 'fixed') {
             discount += promo.discountPrice;
           } else if (promo.discountType === 'percentage') {
@@ -132,14 +125,11 @@ exports.bookTickets = catchAsync(async (req, res) => {
         return res.status(400).json({ success: false, message: "Invalid promo code." });
       }
     }
-  
     totalCost -= discount;
-  
     const event = await Event.findById(eventId);
     if (!event) {
         return res.status(404).json({ success: false, message: "Event not found." });
     }
-
     const transactionId = `TRX-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
     const paymentDetails = {
         Uid: uuidv4(),
@@ -152,7 +142,6 @@ exports.bookTickets = catchAsync(async (req, res) => {
         TransactionId: transactionId,
         Custom1: "ticket-booking",
     };
-
     try {
         const paymentResult = await generatePaymentRequestSKIP(paymentDetails);
         const payUrl = paymentResult.payUrl;
@@ -160,8 +149,7 @@ exports.bookTickets = catchAsync(async (req, res) => {
         if (!payUrl) {
             return res.status(500).json({ message: "Failed to generate payment URL" });
         }
-            const  qrCodeData= generateQRCodeUrl(payUrl);
-
+       const  qrCodeData= generateQRCodeUrl(payUrl);
         const booking = new Booking({
             eventId,
             emailId,
@@ -322,11 +310,11 @@ exports.bookTickets = catchAsync(async (req, res) => {
       //   </div>
       // `;
       
-           await transporter.sendMail({
-              to: emailId,
-              subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
-              html: emailContent,
-             });
+        //    await transporter.sendMail({
+        //       to: emailId,
+        //       subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
+        //       html: emailContent,
+        //      });
 
         res.status(201).json({
             message: "Ticket booked successfully",
@@ -374,15 +362,12 @@ exports.handleWebhook = catchAsync(async (req, res) => {
   const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
   const authHeader = req.headers['authorization'];
 console.log("Webhook auth heade ris",authHeader);
-
-
   if (!PaymentId || !Amount || !StatusId || !TransactionId) {
       return res.status(400).json({
           success: false,
           message: "Invalid webhook data.",
       });
   }
-
   const calculatedSignature = calculateSignature(req.body);
   console.log("Calculated Signature is",calculatedSignature);
   if (authHeader !== calculatedSignature) {
@@ -409,9 +394,110 @@ console.log("Webhook auth heade ris",authHeader);
           booking.paymentStatus = 'Completed';
           emailSubject = `Payment Confirmed: Your tickets for ${event.name}`;
           emailContent = `
-              <p>Your payment for ${event.name} tickets has been successfully processed.</p>
-              <p>Total Amount: ${Amount} QAR</p>
-              <p>Thank you for your purchase. We look forward to seeing you at the event!</p>
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            color: #333;
+            position: relative;
+            padding: 30px;
+            overflow: hidden;
+            border: 6px solid #800000;
+        }
+        .ticket-content {
+            width: 100%;
+            position: relative;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .button {
+            display: inline-block;
+            font-size: 16px;
+            font-weight: bold;
+            background-color: #436ea5;
+            padding: 12px 24px;
+            border-radius: 25px;
+            color: #fff;
+            text-decoration: none;
+            align-self: flex-start;
+            margin-top: 20px;
+        }
+        .qr-code {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 100px;
+            height: 100px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            z-index: 2;
+        }
+        .signature {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #800000;
+            display: flex;
+            align-items: center;
+        }
+        .signature img {
+            width: 60px;
+            height: 60px;
+            margin-right: 15px;
+        }
+        .signature h1 {
+            color: #921A40;
+            font-size: 1.5rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ticket-content">
+           <div class="qr-code">
+                <img src="${qrCodeData}" alt="QR Code">
+             </div>
+            <div class="content">
+                <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
+                <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
+                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
+                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+            </div>
+        </div>
+        <div class="signature">
+            <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
+            <h1><b>Atlantis</b></h1>
+        </div>
+    </div>
+</body>
+</html>
           `;
           break;
       case 3: 
