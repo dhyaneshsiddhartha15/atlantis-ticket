@@ -163,90 +163,7 @@ exports.bookTickets = catchAsync(async (req, res) => {
         await booking.save();
         setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
 
-        //    await transporter.sendMail({
-        //       to: emailId,
-        //       subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
-        //       html: emailContent,
-        //      });
-
-        res.status(201).json({
-            message: "Ticket booked successfully",
-            discountApplied: discount,
-            payUrl: payUrl, 
-        });
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "Booking failed", error: error.message });
-    }
-});
-
-const cancelBooking = async (bookingId) => {
-    const booking = await Booking.findById(bookingId);
-    if (booking && booking.paymentStatus === 'Pending') {
-        booking.paymentStatus = 'Cancelled';
-        await booking.save();
-
-        const event = await Event.findById(booking.eventId);
-        const emailContent = `
-    <h3 style="font-family: Arial, sans-serif; color: #333;">
-    Hello ${booking.emailId.split("@")[0]},
-    </h3>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
-    </p>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        If you still wish to attend the event, please make a new booking.
-    </p>
-    <br>
-    ${Emailsignature}
-`;
-
-        await transporter.sendMail({
-            to: booking.emailId,
-            subject: `Booking Cancelled: ${event.name}`,
-            html: emailContent,
-        });
-    }
-};
-
-//Webhook//
-exports.handleWebhook = catchAsync(async (req, res) => {
-  console.log("Web Hook Called----");
-  const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
-  const authHeader = req.headers['authorization'];
-console.log("Webhook auth heade ris",authHeader);
-  if (!PaymentId || !Amount || !StatusId || !TransactionId) {
-      return res.status(400).json({
-          success: false,
-          message: "Invalid webhook data.",
-      });
-  }
-  const calculatedSignature = calculateSignature(req.body);
-  console.log("Calculated Signature is",calculatedSignature);
-  if (authHeader !== calculatedSignature) {
-      return res.status(401).json({
-          success: false,
-          message: "Invalid signature.",
-      });
-  }
-
-  const booking = await Booking.findOne({ transactionId: TransactionId });
-  if (!booking) {
-      return res.status(404).json({ success: false, message: "Booking not found." });
-  }
-
-  const event = await Event.findById(booking.eventId);
-  if (!event) {
-      return res.status(404).json({ success: false, message: "Event not found." });
-  }
-
-  let emailSubject, emailContent;
-
-  switch (parseInt(StatusId)) {
-      case 2: 
-          booking.paymentStatus = 'Completed';
-          emailSubject = `Payment Confirmed: Your tickets for ${event.name}`;
-          emailContent = `<!DOCTYPE html>
+        const emailContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -333,9 +250,18 @@ console.log("Webhook auth heade ris",authHeader);
 <body>
     <div class="container">
         <div class="ticket-content">
+            <div class="qr-code">
+                <img src="${qrCodeData}" alt="QR Code">
+            </div>
             <div class="content">
                 <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
                 <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
+                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
+                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+                <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
+                <p style="color: #800000; margin: 20px 0; font-weight: bold;">
+                    Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+                </p>
             </div>
         </div>
         <div class="signature">
@@ -346,6 +272,132 @@ console.log("Webhook auth heade ris",authHeader);
 </body>
 </html>
 `;
+
+      //   const emailContent = `
+      //   <div style="font-family: Arial, sans-serif; background-color: #04030C; color: #fff; padding: 20px; border-radius: 15px; width: 700px; margin: 0 auto; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
+      //     <h3 style="color: #fff; margin-bottom: 20px;">
+      //       Hello ${emailId.split("@")[0]},
+      //     </h3>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Thank you for booking tickets for <span style="font-weight: bold;">${event.name}</span>. We are thrilled to have you join us for this exciting event.
+      //     </p>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Here are the booking details:
+      //     </p>
+      //     <div style="margin-bottom: 20px;">
+      //       <h4 style="color: #fff; font-weight: bold;">Event Name: ${event.name}</h4>
+      //       <h4 style="color: #fff; font-weight: bold;">Number Of Tickets: ${totalQuantity}</h4>
+      //       <h4 style="color: #fff; font-weight: bold;">Total Amount: ${totalCost} QAR</h4>
+      //     </div>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       To complete your payment, please use one of the following options:
+      //     </p>
+      //     <div style="display: flex; align-items: center; margin-bottom: 20px;">
+      //       <div style="margin-right: 20px;">
+      //         <img src="${qrCodeData}" alt="QR Code" style="width: 150px; height: 150px; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3); border-radius: 10px;" />
+      //       </div>
+      //       <div>
+      //         <a href="${payUrl}" style="background-color: #436ea5; color: #fff; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: bold; display: inline-block; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
+      //           Complete Payment
+      //         </a>
+      //       </div>
+      //     </div>
+      //     <p style="color: #fff; margin-bottom: 20px;">
+      //       Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+      //     </p>
+      //     <br>
+      //     ${Emailsignature}
+      //   </div>
+      // `;
+      
+           await transporter.sendMail({
+              to: emailId,
+              subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
+              html: emailContent,
+             });
+
+        res.status(201).json({
+            message: "Ticket booked successfully",
+            discountApplied: discount,
+            payUrl: payUrl, 
+        });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Booking failed", error: error.message });
+    }
+});
+
+const cancelBooking = async (bookingId) => {
+    const booking = await Booking.findById(bookingId);
+    if (booking && booking.paymentStatus === 'Pending') {
+        booking.paymentStatus = 'Cancelled';
+        await booking.save();
+
+        const event = await Event.findById(booking.eventId);
+        const emailContent = `
+    <h3 style="font-family: Arial, sans-serif; color: #333;">
+    Hello ${booking.emailId.split("@")[0]},
+    </h3>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
+    </p>
+    <p style="font-family: Arial, sans-serif; color: #333;">
+        If you still wish to attend the event, please make a new booking.
+    </p>
+    <br>
+    ${Emailsignature}
+`;
+
+        await transporter.sendMail({
+            to: booking.emailId,
+            subject: `Booking Cancelled: ${event.name}`,
+            html: emailContent,
+        });
+    }
+};
+
+//Webhook//
+exports.handleWebhook = catchAsync(async (req, res) => {
+  console.log("Web Hook Called----");
+  const { PaymentId, Amount, StatusId, TransactionId, Custom1, VisaId } = req.body;
+  const authHeader = req.headers['authorization'];
+console.log("Webhook auth heade ris",authHeader);
+  if (!PaymentId || !Amount || !StatusId || !TransactionId) {
+      return res.status(400).json({
+          success: false,
+          message: "Invalid webhook data.",
+      });
+  }
+  const calculatedSignature = calculateSignature(req.body);
+  console.log("Calculated Signature is",calculatedSignature);
+  if (authHeader !== calculatedSignature) {
+      return res.status(401).json({
+          success: false,
+          message: "Invalid signature.",
+      });
+  }
+
+  const booking = await Booking.findOne({ transactionId: TransactionId });
+  if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found." });
+  }
+
+  const event = await Event.findById(booking.eventId);
+  if (!event) {
+      return res.status(404).json({ success: false, message: "Event not found." });
+  }
+
+  let emailSubject, emailContent;
+
+  switch (parseInt(StatusId)) {
+      case 2: 
+          booking.paymentStatus = 'Completed';
+          emailSubject = `Payment Confirmed: Your tickets for ${event.name}`;
+          emailContent = `
+              <p>Your payment for ${event.name} tickets has been successfully processed.</p>
+              <p>Total Amount: ${Amount} QAR</p>
+              <p>Thank you for your purchase. We look forward to seeing you at the event!</p>
+          `;
           break;
       case 3: 
           booking.paymentStatus = 'Failed';
