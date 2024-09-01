@@ -74,9 +74,7 @@ exports.bookTickets = catchAsync(async (req, res) => {
     if (ticketTypes.length !== tickets.length) {
         return res.status(400).json({ success: false, message: "Invalid tickets." });
     }
-
     let totalQuantity = 0, totalCost = 0;
-    
     const ticketDetails = tickets.map((ticket) => {
       const ticketType = ticketTypes.find((type) => type._id.toString() === ticket.type.toString());
       const cost = ticketType.price * ticket.quantity;
@@ -158,120 +156,120 @@ exports.bookTickets = catchAsync(async (req, res) => {
             discount,
             transactionId,
             paymentStatus: 'Pending',
-            expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+            // expiresAt: new Date(Date.now() + 15 * 60 * 1000)
         });
         await booking.save();
-        setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
+        // setTimeout(() => cancelBooking(booking._id), 15 * 60 * 1000);
 
-        const emailContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #ffffff;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            color: #333;
-            position: relative;
-            padding: 30px;
-            overflow: hidden;
-            border: 6px solid #800000;
-        }
-        .ticket-content {
-            width: 100%;
-            position: relative;
-        }
-        .content {
-            position: relative;
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .button {
-            display: inline-block;
-            font-size: 16px;
-            font-weight: bold;
-            background-color: #436ea5;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: #fff;
-            text-decoration: none;
-            align-self: flex-start;
-            margin-top: 20px;
-        }
-        .qr-code {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 100px;
-            height: 100px;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            z-index: 2;
-        }
-        .signature {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 2px solid #800000;
-            display: flex;
-            align-items: center;
-        }
-        .signature img {
-            width: 60px;
-            height: 60px;
-            margin-right: 15px;
-        }
-        .signature h1 {
-            color: #921A40;
-            font-size: 1.5rem;
-            margin: 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="ticket-content">
-            <div class="qr-code">
-                <img src="${qrCodeData}" alt="QR Code">
-            </div>
-            <div class="content">
-                <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
-                <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
-                <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
-                <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
-                <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
-                <p style="color: #800000; margin: 20px 0; font-weight: bold;">
-                    Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
-                </p>
-            </div>
-        </div>
-        <div class="signature">
-            <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
-            <h1><b>Atlantis</b></h1>
-        </div>
-    </div>
-</body>
-</html>
-`;
+//         const emailContent = `<!DOCTYPE html>
+// <html lang="en">
+// <head>
+//     <meta charset="UTF-8">
+//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//     <style>
+//         body {
+//             font-family: Arial, sans-serif;
+//             background-color: #ffffff;
+//             margin: 0;
+//             padding: 20px;
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             min-height: 100vh;
+//         }
+//         .container {
+//             width: 100%;
+//             max-width: 600px;
+//             background-color: #ffffff;
+//             border-radius: 15px;
+//             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+//             color: #333;
+//             position: relative;
+//             padding: 30px;
+//             overflow: hidden;
+//             border: 6px solid #800000;
+//         }
+//         .ticket-content {
+//             width: 100%;
+//             position: relative;
+//         }
+//         .content {
+//             position: relative;
+//             z-index: 1;
+//             display: flex;
+//             flex-direction: column;
+//             gap: 15px;
+//         }
+//         .button {
+//             display: inline-block;
+//             font-size: 16px;
+//             font-weight: bold;
+//             background-color: #436ea5;
+//             padding: 12px 24px;
+//             border-radius: 25px;
+//             color: #fff;
+//             text-decoration: none;
+//             align-self: flex-start;
+//             margin-top: 20px;
+//         }
+//         .qr-code {
+//             position: absolute;
+//             top: 20px;
+//             right: 20px;
+//             width: 100px;
+//             height: 100px;
+//             background-color: #f0f0f0;
+//             display: flex;
+//             justify-content: center;
+//             align-items: center;
+//             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+//             border-radius: 10px;
+//             z-index: 2;
+//         }
+//         .signature {
+//             margin-top: 30px;
+//             padding-top: 20px;
+//             border-top: 2px solid #800000;
+//             display: flex;
+//             align-items: center;
+//         }
+//         .signature img {
+//             width: 60px;
+//             height: 60px;
+//             margin-right: 15px;
+//         }
+//         .signature h1 {
+//             color: #921A40;
+//             font-size: 1.5rem;
+//             margin: 0;
+//         }
+//     </style>
+// </head>
+// <body>
+//     <div class="container">
+//         <div class="ticket-content">
+//             <div class="qr-code">
+//                 <img src="${qrCodeData}" alt="QR Code">
+//             </div>
+//             <div class="content">
+//                 <div style="font-size: 28px; font-weight: bold; color: #800000;">Hello ${emailId.split("@")[0]}</div>
+//                 <div style="font-size: 24px; font-weight: bold;">Event Name: ${event.name}</div>
+//                 <div style="font-size: 20px;">Total Amount: ${totalCost} QAR</div>
+//                 <div style="font-size: 20px;">Number Of Tickets: ${totalQuantity}</div>
+//                 <a href="${payUrl}" class="button">COMPLETE PAYMENT</a>
+//                 <p style="color: #800000; margin: 20px 0; font-weight: bold;">
+//                     Please note that your booking will be automatically cancelled if payment is not completed within 15 minutes.
+//                 </p>
+//             </div>
+//         </div>
+//         <div class="signature">
+//             <img src="https://cdn2.advanceinfotech.org/doha.directory/1200x675/business/2278/futad-advertising-qatar-1657866216.webp" alt="Atlantis Logo">
+//             <h1><b>Atlantis</b></h1>
+//         </div>
+//     </div>
+// </body>
+// </html>
+// `;
 
       //   const emailContent = `
       //   <div style="font-family: Arial, sans-serif; background-color: #04030C; color: #fff; padding: 20px; border-radius: 15px; width: 700px; margin: 0 auto; box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);">
@@ -310,11 +308,11 @@ exports.bookTickets = catchAsync(async (req, res) => {
       //   </div>
       // `;
       
-           await transporter.sendMail({
-              to: emailId,
-              subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
-              html: emailContent,
-             });
+        //    await transporter.sendMail({
+        //       to: emailId,
+        //       subject: `TICKET BOOKED: Complete your payment for ${event.name} tickets`,
+        //       html: emailContent,
+        //      });
 
         res.status(201).json({
             message: "Ticket booked successfully",
@@ -327,34 +325,34 @@ exports.bookTickets = catchAsync(async (req, res) => {
     }
 });
 
-const cancelBooking = async (bookingId) => {
-    const booking = await Booking.findById(bookingId);
-    if (booking && booking.paymentStatus === 'Pending') {
-        booking.paymentStatus = 'Cancelled';
-        await booking.save();
+// const cancelBooking = async (bookingId) => {
+//     const booking = await Booking.findById(bookingId);
+//     if (booking && booking.paymentStatus === 'Pending') {
+//         booking.paymentStatus = 'Cancelled';
+//         await booking.save();
 
-        const event = await Event.findById(booking.eventId);
-        const emailContent = `
-    <h3 style="font-family: Arial, sans-serif; color: #333;">
-    Hello ${booking.emailId.split("@")[0]},
-    </h3>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
-    </p>
-    <p style="font-family: Arial, sans-serif; color: #333;">
-        If you still wish to attend the event, please make a new booking.
-    </p>
-    <br>
-    ${Emailsignature}
-`;
+//         const event = await Event.findById(booking.eventId);
+//         const emailContent = `
+//     <h3 style="font-family: Arial, sans-serif; color: #333;">
+//     Hello ${booking.emailId.split("@")[0]},
+//     </h3>
+//     <p style="font-family: Arial, sans-serif; color: #333;">
+//         We regret to inform you that your booking for ${event.name} has been cancelled due to incomplete payment.
+//     </p>
+//     <p style="font-family: Arial, sans-serif; color: #333;">
+//         If you still wish to attend the event, please make a new booking.
+//     </p>
+//     <br>
+//     ${Emailsignature}
+// `;
 
-        await transporter.sendMail({
-            to: booking.emailId,
-            subject: `Booking Cancelled: ${event.name}`,
-            html: emailContent,
-        });
-    }
-};
+//         await transporter.sendMail({
+//             to: booking.emailId,
+//             subject: `Booking Cancelled: ${event.name}`,
+//             html: emailContent,
+//         });
+//     }
+// };
 
 //Webhook//
 exports.handleWebhook = catchAsync(async (req, res) => {
